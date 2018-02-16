@@ -7,11 +7,11 @@
 SHELL := /bin/bash
 RM    := rm -rf
 MKDIR := mkdir -p
-BUILDROOT := /mnt/d/PBA/base/Build
+BUILDROOT := /home/connie/Desktop/CIS_563/homework/cispba/Build
 BUILDDEFAULT := Release
 RELATIVEPATH := Projects/FEM
 BUILDDIR = $(BUILDROOT)/$(BUILDDEFAULT)/$(RELATIVEPATH)
-ROOTDIR := /mnt/d/PBA/base
+ROOTDIR := /home/connie/Desktop/CIS_563/homework/cispba
 BUILDTYPES := Release MinSizeRel Debug Coverage RelWithDebInfo Quick
 OTHERGOALS := $(filter-out distclean $(BUILDTYPES),$(MAKECMDGOALS))
 
