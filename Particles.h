@@ -1,5 +1,4 @@
-#ifndef PARTICLES_H
-#define PARTICLES_H
+#pragma once
 
 #include <iostream>
 #include <vector>
@@ -10,8 +9,6 @@
 #include <math.h>
 #include <iterator>
 #include <fstream>
-
-///// Particle Class >>>>> /////
 
 template<class T, int dim>
 class Particles{
@@ -57,5 +54,3 @@ void Particles<T,dim>::write_data_bgeo(const std::string& s){
     Partio::write(file.c_str(), *parts);
     parts->release();
 }
-
-#endif
