@@ -73,9 +73,12 @@ void FEMSolver<T,dim>::cookMyJello() {
         t.precompute(positions);
     }
 
-    // for(int i = 0; i < steps; ++i){
-    //     mTetraMesh
-    // }
+    for(int i = 0; i < steps; ++i){
+        mTetraMesh->mParticles.zeroForces();
+        for(Tetrahedron<T,dim> t : mTetraMesh->mTetras){
+
+        }
+    }
     // time loop
         // zero forces
         // compute forces
