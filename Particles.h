@@ -22,6 +22,7 @@ public:
 	Particles();
 	~Particles();
 
+    void zeroForces();
 	void write_data_bgeo(const std::string& s);
 };
 
@@ -30,6 +31,15 @@ Particles<T,dim>::Particles() : positions(), velocities(), forces(), drags(), ma
 
 template<class T, int dim>
 Particles<T,dim>::~Particles() {}
+
+template<class T, int dim>
+void Particles<T,dim>::zeroForces(){
+    for(unsigned int i = 0; i < forces.size(); ++i){
+        for(int j = 0; j < dim; ++j){
+            forces[i][j] = 0;
+        }
+    }
+}
 
 template<class T, int dim>
 void Particles<T,dim>::write_data_bgeo(const std::string& s){

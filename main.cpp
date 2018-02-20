@@ -60,7 +60,7 @@ int main()
 
     // Cook My Jello!
 
-    FEMSolver solver;
+    FEMSolver<float,3> solver;
     solver.initializeMesh();
     solver.cookMyJello();
 
