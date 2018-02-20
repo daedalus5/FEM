@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Dense"
+#include "Eigen/Dense"
 #include <string>
 #include <vector>
-#include <src/Core/Matrix.h>
+#include <Eigen/Core/Matrix.h>
 
 using Eigen::MatrixXd;
 
