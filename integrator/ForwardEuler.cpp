@@ -13,14 +13,15 @@ void ForwardEuler::integrate(float timeStep, int params, const State &currentSta
         return;
     }
 
+    // Derivative of position is the current velocity of particle
     newState.mComponentDot[POS] = currentState.mComponents[VEL];
-    newState.mComponentDot[VEL] = currentState.mComponents[ACC];
-    newState.mComponentDot[ACC] = currentState.mComponents[FOR] / currentState.mMass;
 
+    // Derivative of velocity is = F/m (from Newtons second law)
+    newState.mComponentDot[VEL] = currentState.mComponents[FOR] / currentState.mMass;
+
+    // Calculate the new positions and velocity
     newState.mComponents[POS] = currentState.mComponents[POS] + newState.mComponentDot[POS] * timeStep;
-    newState.mComponents[VEL] = currentState.mComponents[POS] + newState.mComponentDot[POS] * timeStep;
-    newState.mComponents[ACC] = currentState.mComponents[POS] + newState.mComponentDot[POS] * timeStep;
+    newState.mComponents[VEL] = currentState.mComponents[VEL] + newState.mComponentDot[VEL] * timeStep;
 
     newState.mMass = currentState.mMass;
-
 }
