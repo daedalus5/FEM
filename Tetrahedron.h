@@ -39,8 +39,8 @@ void Tetrahedron<T,dim>::precompute(const std::vector<Eigen::Matrix<T,dim,1>>& x
         Dm.col(i) = x[i] - x.back();
     }
     switch(dim){
-        case 2: volume = Dm.determinant() / 2;
-        case 3: volume = Dm.determinant() / 6;
+        case 2: volume = Dm.determinant() / 2; break;
+        case 3: volume = Dm.determinant() / 6; break;
         default: std::cout << "error: dimension must be 2 or 3" << std::endl;
     }
     if(volume != 0){    // check if Dm is nonsingular

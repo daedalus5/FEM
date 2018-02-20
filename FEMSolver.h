@@ -18,20 +18,21 @@ class FEMSolver {
 private:
     //ForwardEuler mIntegrator;
     TetraMesh<T,dim> *mTetraMesh;
+    int mSteps;
     double mu;
     double lambda;
 
     void calculateConstants();      // calculates mu and lambda values for material
 
 public:
-    FEMSolver();
+    FEMSolver(int steps);
 
     void initializeMesh();
     void cookMyJello();
 };
 
 template<class T, int dim>
-FEMSolver<T,dim>::FEMSolver()  {}
+FEMSolver<T,dim>::FEMSolver(int steps) : mSteps(steps) {}
 
 template<class T, int dim>
 void FEMSolver<T,dim>::initializeMesh() {
@@ -62,7 +63,7 @@ void FEMSolver<T,dim>::cookMyJello() {
     // calculate deformation constants
     calculateConstants();
 
-    // precompute tetrahedron values
+    // precompute tetrahedron constant values
     std::vector<Eigen::Matrix<T,dim,1>> positions;
     for(Tetrahedron<T,dim> t : mTetraMesh->mTetras){
         positions.clear();
@@ -72,6 +73,9 @@ void FEMSolver<T,dim>::cookMyJello() {
         t.precompute(positions);
     }
 
+    // for(int i = 0; i < steps; ++i){
+    //     mTetraMesh
+    // }
     // time loop
         // zero forces
         // compute forces
