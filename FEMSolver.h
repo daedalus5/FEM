@@ -1,7 +1,7 @@
 #pragma once
 
-#include "TetraMesh.h"
-#include "Tetrahedron.h"
+#include "mesh/TetraMesh.h"
+#include "mesh/Tetrahedron.h"
 
 using T = float;
 const int dim = 3;
@@ -73,7 +73,7 @@ void FEMSolver<T,dim>::cookMyJello() {
         t.precompute(positions);
     }
 
-    for(int i = 0; i < steps; ++i){
+    for(int i = 0; i < mSteps; ++i){
         mTetraMesh->mParticles.zeroForces();
         for(Tetrahedron<T,dim> t : mTetraMesh->mTetras){
 

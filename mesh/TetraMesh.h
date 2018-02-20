@@ -1,7 +1,8 @@
 #pragma once
 
-
+#include <iostream>
 #include <string>
+
 #include "Mesh.h"
 #include "Particles.h"
 #include "Tetrahedron.h"
@@ -9,14 +10,17 @@
 template<class T, int dim>
 class TetraMesh : public Mesh<T,dim>{
 public:
+    static double k;
+    static double nu;
+
     TetraMesh(std::string s);
     virtual ~TetraMesh();
 
     void generateTetras();      // read data from tetgen and populate particles and tetras
     void outputFrame(int i);    // write data to frame i
-private:
+
     Particles<T,dim> mParticles;
-    std::vector<Tetrahedron> mTetras;
+    std::vector<Tetrahedron<T,dim>> mTetras;
 };
 
 template<class T, int dim>
