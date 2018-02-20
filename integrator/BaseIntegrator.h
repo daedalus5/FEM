@@ -1,6 +1,6 @@
 #pragma once
 
-#include "globalincludes.h"
+#include "../globalincludes.h"
 #include <string>
 #include <vector>
 

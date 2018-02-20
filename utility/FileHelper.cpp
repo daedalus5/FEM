@@ -39,7 +39,7 @@ bool FileHelper::printFloats(char *path, std::vector<float> &output) {
         return false;
     }
 
-    for(int i = 0; i < output.size(); ++i)
+    for(unsigned int i = 0; i < output.size(); ++i)
     {
         outputStream << output[i] << " ";
     }

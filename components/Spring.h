@@ -2,7 +2,7 @@
 #pragma once
 
 #include <vector>
-#include "globalincludes.h"
+#include "../globalincludes.h"
 
 class Spring {
 
