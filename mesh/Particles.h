@@ -1,11 +1,8 @@
 #pragma once
 
-#include <iostream>
 #include <vector>
 #include <string>
-#include <Partio.h>
-#include <Core>
-#include <Dense>
+#include "globalincludes.h"
 #include <math.h>
 #include <iterator>
 #include <fstream>

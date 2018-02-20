@@ -1,11 +1,9 @@
 #pragma once
 
-#include "Eigen/Dense"
+#include "globalincludes.h"
 #include <string>
 #include <vector>
-#include <Eigen/Core/Matrix.h>
 
-using Eigen::MatrixXd;
 
 const static int POS = 0;
 const static int VEL = 1;

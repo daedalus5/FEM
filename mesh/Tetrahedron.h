@@ -1,11 +1,8 @@
 #pragma once
 
-#include <iostream>
 #include <vector>
 #include <string>
-
-#include <Core>
-#include <Dense>
+#include "globalincludes.h"
 #include <math.h>
 
 class Tetrahedron{

@@ -1,8 +1,7 @@
 #pragma once
 
-#include <iostream>
-#include <string>
 
+#include <string>
 #include "Mesh.h"
 #include "Particles.h"
 #include "Tetrahedron.h"

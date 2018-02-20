@@ -2,7 +2,7 @@
 #pragma once
 
 #include <vector>
-#include "Dense"
+#include "globalincludes.h"
 
 class Spring {
 
