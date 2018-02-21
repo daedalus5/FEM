@@ -14,6 +14,7 @@ public:
 	std::vector<int> mPIndices;        // tetrahedron vertices
     Eigen::Matrix<T,dim,dim> mDmInv;   // rest configuration Dm inverse
     T volume;                          // volume of tetrahedron in rest configuration
+    Eigen::Matrix<T,dim,dim> mVolDmInv;// volume * Dm inverse
 
 	Tetrahedron(const std::vector<int>& indices);
 	~Tetrahedron();
@@ -27,7 +28,8 @@ template<class T, int dim>
 Tetrahedron<T,dim>::Tetrahedron(const std::vector<int>& indices) :
                                 mPIndices(indices),
                                 mDmInv(Eigen::Matrix<T,dim,dim>::Zero(dim, dim)),
-                                volume(0.0) {}
+                                volume(0.0),
+                                mVolDmInv(Eigen::Matrix<T,dim,dim>::Zero(dim, dim)) {}
 
 template<class T, int dim>
 Tetrahedron<T,dim>::~Tetrahedron(){}
@@ -46,6 +48,7 @@ void Tetrahedron<T,dim>::precompute(const std::vector<Eigen::Matrix<T,dim,1>>& x
     if(volume != 0){    // check if Dm is nonsingular
         mDmInv = Dm.inverse();
     }
+    mVolDmInv = volume * mDmInv;
 }
 
 template<class T, int dim>
