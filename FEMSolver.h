@@ -46,9 +46,9 @@ template<class T, int dim>
 void FEMSolver<T,dim>::initializeMesh() {
 
     // Initialize mTetraMesh here
-    TetraMesh<T,dim> *tetraMesh = new TetraMesh<T,dim>("hello");
+    TetraMesh<T,dim> *tetraMesh = new TetraMesh<T,dim>("objects/cube.1");
     mTetraMesh = tetraMesh;
-
+    mTetraMesh->generateTetras();
 }
 
 template<class T, int dim>
@@ -74,6 +74,8 @@ void FEMSolver<T,dim>::cookMyJello() {
             computeR(R, F);
         }
     }
+
+      // NOTE: mTetraMesh->outputFrame(frame#);
 }
 
 template<class T, int dim>
