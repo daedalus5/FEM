@@ -10,7 +10,7 @@
 
 // values are for rubber;
 template<class T, int dim>
-double TetraMesh<T,dim>::k = 0.05;
+double TetraMesh<T,dim>::k = 100.0;
 template<class T, int dim>
 double TetraMesh<T,dim>::nu = 0.49;
 
@@ -100,11 +100,11 @@ void FEMSolver<T,dim>::cookMyJello() {
             P = mu * (F - R) + lambda * (F.determinant() - 1) * JFinvT;
             P *= t.mVolDmInv;
             // if(i == 600){
-            //     std::cout << t.mVolDmInv << std::endl;
+            //     std::cout << P << std::endl;
             // }
             for(int j = 1; j < dim + 1; ++j){
                 mTetraMesh->mParticles.forces[t.mPIndices[j]] += P.col(j - 1);
-                force += P.col(j);
+                force += P.col(j - 1);
             }
             mTetraMesh->mParticles.forces[t.mPIndices[0]] += -force;
         }
@@ -114,6 +114,10 @@ void FEMSolver<T,dim>::cookMyJello() {
 
         int size = mTetraMesh->mParticles.positions.size();
         std::vector<Eigen::Matrix<T, dim, 1>> past_pos = mTetraMesh->mParticles.positions;
+
+        // if(i == 600){
+        //     std::cout << mTetraMesh->mParticles.forces[5] << std::endl;
+        // }
 
         for(int j = 0; j < size; ++j) {
 
