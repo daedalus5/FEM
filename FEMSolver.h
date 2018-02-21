@@ -31,6 +31,7 @@ private:
                     const Tetrahedron<T,dim>& t);       // computes F matrix
     void computeR(Eigen::Matrix<T,dim,dim>& R,
                     const Eigen::Matrix<T,dim,dim>& F); // computes R matrix from F using SVD
+    void computeFInvTran(Eigen::Matrix<T,dim,dim> F);   // computes det(F) * (F^-1)^T
 
 public:
     FEMSolver(int steps);
@@ -65,7 +66,7 @@ void FEMSolver<T,dim>::cookMyJello() {
     Eigen::Matrix<T,dim,dim> Ds = Eigen::Matrix<T,dim,dim>::Zero(dim,dim);
     // SVD rotation matrix
     Eigen::Matrix<T,dim,dim> R = Eigen::Matrix<T,dim,dim>::Zero(dim,dim);
-    // P matrix
+    // Piola stress tensor
     Eigen::Matrix<T,dim,dim> P = Eigen::Matrix<T,dim,dim>::Zero(dim,dim);
     // momentum conservation
     Eigen::Matrix<T,dim,1> force = Eigen::Matrix<T,dim,1>::Zero(dim);
@@ -79,11 +80,11 @@ void FEMSolver<T,dim>::cookMyJello() {
             computeR(R, F);
             P = mu * (F - R) + lambda * (F.determinant() - 1) * F.determinant() * F.transpose().inverse();
             P *= t.mVolDmInv;
-            for(int j = 0; j < dim; ++j){
+            for(int j = 1; j < dim + 1; ++j){
                 mTetraMesh->mParticles.forces[t.mPIndices[j]] += P.col(j);
                 force += P.col(j);
             }
-            mTetraMesh->mParticles.forces[t.mPIndices[dim]] += -force;
+            mTetraMesh->mParticles.forces[t.mPIndices[0]] += -force;
         }
         // integration step
         // mTetraMesh->outputFrame(frame#);
