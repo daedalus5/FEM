@@ -86,6 +86,12 @@ void FEMSolver<T,dim>::cookMyJello() {
             mTetraMesh->mParticles.forces[t.mPIndices[dim]] += -force;
         }
         // integration step
+
+        // collision check. Loop through particles of mTetraMesh
+            // Update velocity if needed.
+            //TODO make a new function for velocity update?
+        //TODO do we have dt????
+
         // mTetraMesh->outputFrame(frame#);
     }
 }

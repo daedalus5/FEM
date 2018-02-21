@@ -17,7 +17,9 @@ bool SquarePlane<T, dim>::checkCollisions(Eigen::Matrix<T, dim, 1> &pos, Eigen::
                 // Move particle out of plane
                 //particles.positions[i][1] = center[1];
                 // Update velocity?
-                //TODO
+
+                // fill out_pos with new position
+                // Some function outside this will calculate velocity
                 out_pos[0] = pos[0];
                 out_pos[1] = center[1];
                 if (dim == 3) {
