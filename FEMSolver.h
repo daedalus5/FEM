@@ -41,20 +41,25 @@ private:
 
 public:
     FEMSolver(int steps);
+    ~FEMSolver();
 
     void initializeMesh();
     void cookMyJello();
 };
 
 template<class T, int dim>
-FEMSolver<T,dim>::FEMSolver(int steps) : mSteps(steps), mIntegrator("explicit") {}
+FEMSolver<T,dim>::FEMSolver(int steps) : mTetraMesh(nullptr), mSteps(steps), mu(0.0), lambda(0.0), mIntegrator("explicit") {}
+
+template<class T, int dim>
+FEMSolver<T,dim>::~FEMSolver(){
+    delete mTetraMesh;
+}
 
 template<class T, int dim>
 void FEMSolver<T,dim>::initializeMesh() {
 
     // Initialize mTetraMesh here
-    TetraMesh<T,dim> *tetraMesh = new TetraMesh<T,dim>("objects/cube.1");
-    mTetraMesh = tetraMesh;
+    mTetraMesh = new TetraMesh<T,dim>("objects/cube.1");
     mTetraMesh->generateTetras();
 }
 
@@ -68,11 +73,6 @@ void FEMSolver<T,dim>::cookMyJello() {
     calculateMaterialConstants();
     // precompute tetrahedron constant values
     precomputeTetraConstants();
-
-    for(Tetrahedron<T,dim> t : mTetraMesh->mTetras){
-        std::cout << t.mVolDmInv << std::endl;
-    }
-
 
     // deformation gradient matrix
     Eigen::Matrix<T,dim,dim> F = Eigen::Matrix<T,dim,dim>::Zero(dim,dim);
@@ -91,7 +91,7 @@ void FEMSolver<T,dim>::cookMyJello() {
     for(int i = 0; i < mSteps; ++i) {
         mTetraMesh->mParticles.zeroForces();
         // <<<<< force update BEGIN
-        for(Tetrahedron<T,dim> t : mTetraMesh->mTetras){
+        for(Tetrahedron<T,dim> &t : mTetraMesh->mTetras){
             force = Eigen::Matrix<T,dim,1>::Zero(dim);
             computeDs(Ds, t);
             computeF(F, Ds, t);
@@ -158,13 +158,12 @@ void FEMSolver<T,dim>::calculateMaterialConstants(){
 template<class T, int dim>
 void FEMSolver<T,dim>::precomputeTetraConstants(){
     std::vector<Eigen::Matrix<T,dim,1>> positions;
-    for(Tetrahedron<T,dim> t : mTetraMesh->mTetras){
+    for(Tetrahedron<T,dim> &t : mTetraMesh->mTetras){
         positions.clear();
         for(int i = 0; i < dim + 1; ++i){
             positions.push_back(mTetraMesh->mParticles.positions[t.mPIndices[i]]);
         }
         t.precompute(positions);
-        std::cout << t.mVolDmInv << std::endl;
     }
 }
 
