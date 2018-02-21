@@ -65,17 +65,29 @@ void FEMSolver<T,dim>::cookMyJello() {
     Eigen::Matrix<T,dim,dim> Ds = Eigen::Matrix<T,dim,dim>::Zero(dim,dim);
     // SVD rotation matrix
     Eigen::Matrix<T,dim,dim> R = Eigen::Matrix<T,dim,dim>::Zero(dim,dim);
+    // P matrix
+    Eigen::Matrix<T,dim,dim> P = Eigen::Matrix<T,dim,dim>::Zero(dim,dim);
+    // momentum conservation
+    Eigen::Matrix<T,dim,1> force = Eigen::Matrix<T,dim,1>::Zero(dim);
 
     for(int i = 0; i < mSteps; ++i){
         mTetraMesh->mParticles.zeroForces();
         for(Tetrahedron<T,dim> t : mTetraMesh->mTetras){
+            force = Eigen::Matrix<T,dim,1>::Zero(dim);
             computeDs(Ds, t);
             computeF(F, Ds, t);
             computeR(R, F);
+            P = mu * (F - R) + lambda * (F.determinant() - 1) * F.determinant() * F.transpose().inverse();
+            P *= t.mVolDmInv;
+            for(int j = 0; j < dim; ++j){
+                mTetraMesh->mParticles.forces[t.mPIndices[j]] += P.col(j);
+                force += P.col(j);
+            }
+            mTetraMesh->mParticles.forces[t.mPIndices[dim]] += -force;
         }
+        // integration step
+        // mTetraMesh->outputFrame(frame#);
     }
-
-      // NOTE: mTetraMesh->outputFrame(frame#);
 }
 
 template<class T, int dim>
@@ -99,7 +111,7 @@ void FEMSolver<T,dim>::precomputeTetraConstants(){
 template<class T, int dim>
 void FEMSolver<T,dim>::computeDs(Eigen::Matrix<T,dim,dim>& Ds, const Tetrahedron<T,dim>& t){
     std::vector<Eigen::Matrix<T,dim,1>> x;
-    for(int i = 0; i < dim; ++i){
+    for(int i = 0; i < dim + 1; ++i){
         x.push_back(mTetraMesh->mParticles.positions[t.mPIndices[i]]);
     }
     for(int i = 0; i < dim; ++i){

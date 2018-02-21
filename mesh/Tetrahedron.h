@@ -48,7 +48,7 @@ void Tetrahedron<T,dim>::precompute(const std::vector<Eigen::Matrix<T,dim,1>>& x
     if(volume != 0){    // check if Dm is nonsingular
         mDmInv = Dm.inverse();
     }
-    mVolDmInv = volume * mDmInv;
+    mVolDmInv = -1 * volume * mDmInv;
 }
 
 template<class T, int dim>
