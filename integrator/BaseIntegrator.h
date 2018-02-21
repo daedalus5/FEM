@@ -3,8 +3,6 @@
 #include "../globalincludes.h"
 #include <string>
 #include <vector>
-#include <../FEMSolver.h>
-
 
 const static int POS = 0;
 const static int VEL = 1;
@@ -15,7 +13,7 @@ const static int MASS = 4;
 template <class T, int dim>
 struct State {
     int mStateId;
-    float mMass;
+    T mMass;
     std::vector<Eigen::Matrix<T, dim, 1>> mComponents;
     std::vector<Eigen::Matrix<T, dim, 1>> mComponentDot;
 

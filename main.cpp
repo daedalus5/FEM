@@ -1,8 +1,8 @@
 #include "FEMSolver.h"
 #include "globalincludes.h"
 
-#define TEST_EIGEN
-#define TEST_PARTIO
+//#define TEST_EIGEN
+//#define TEST_PARTIO
 
 void checkIfEigenWorks() {
     MatrixXd m(2,2);
