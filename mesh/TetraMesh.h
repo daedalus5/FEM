@@ -122,6 +122,7 @@ void TetraMesh<T,dim>::outputFrame(int frame){
           else
              particleFile = "frame" + f +".bgeo";
 
+          particleFile = "output/" + particleFile;
           Partio::write(particleFile.c_str(), *parts);
           parts->release();
 }
