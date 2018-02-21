@@ -69,6 +69,11 @@ void FEMSolver<T,dim>::cookMyJello() {
     // precompute tetrahedron constant values
     precomputeTetraConstants();
 
+    for(Tetrahedron<T,dim> t : mTetraMesh->mTetras){
+        std::cout << t.mVolDmInv << std::endl;
+    }
+
+
     // deformation gradient matrix
     Eigen::Matrix<T,dim,dim> F = Eigen::Matrix<T,dim,dim>::Zero(dim,dim);
     // deformed tetrahedron matrix
@@ -94,8 +99,11 @@ void FEMSolver<T,dim>::cookMyJello() {
             computeJFinvT(JFinvT, F);
             P = mu * (F - R) + lambda * (F.determinant() - 1) * JFinvT;
             P *= t.mVolDmInv;
+            // if(i == 600){
+            //     std::cout << t.mVolDmInv << std::endl;
+            // }
             for(int j = 1; j < dim + 1; ++j){
-                mTetraMesh->mParticles.forces[t.mPIndices[j]] += P.col(j);
+                mTetraMesh->mParticles.forces[t.mPIndices[j]] += P.col(j - 1);
                 force += P.col(j);
             }
             mTetraMesh->mParticles.forces[t.mPIndices[0]] += -force;
@@ -107,20 +115,20 @@ void FEMSolver<T,dim>::cookMyJello() {
         int size = mTetraMesh->mParticles.positions.size();
         std::vector<Eigen::Matrix<T, dim, 1>> past_pos = mTetraMesh->mParticles.positions;
 
-        for(int i = 0; i < size; ++i) {
+        for(int j = 0; j < size; ++j) {
 
             State<T, dim> currState;
             State<T, dim> newState;
 
-            currState.mComponents[POS] = mTetraMesh->mParticles.positions[i];
-            currState.mComponents[VEL] = mTetraMesh->mParticles.velocities[i];
-            currState.mMass = mTetraMesh->mParticles.masses[i];
-            currState.mComponents[FOR] = mTetraMesh->mParticles.forces[i] +  Eigen::Matrix<T,dim,1>(0, -9.8f, 0) * currState.mMass;
+            currState.mComponents[POS] = mTetraMesh->mParticles.positions[j];
+            currState.mComponents[VEL] = mTetraMesh->mParticles.velocities[j];
+            currState.mMass = mTetraMesh->mParticles.masses[j];
+            currState.mComponents[FOR] = mTetraMesh->mParticles.forces[j] +  Eigen::Matrix<T,dim,1>(0, -9.8f, 0) * currState.mMass;
 
             mIntegrator.integrate(cTimeStep, 0, currState, newState);
 
-            mTetraMesh->mParticles.positions[i] = newState.mComponents[POS];
-            mTetraMesh->mParticles.velocities[i] = newState.mComponents[VEL];
+            mTetraMesh->mParticles.positions[j] = newState.mComponents[POS];
+            mTetraMesh->mParticles.velocities[j] = newState.mComponents[VEL];
 
         }
 
@@ -128,11 +136,11 @@ void FEMSolver<T,dim>::cookMyJello() {
 
         // collision check. Loop through particles of mTetraMesh
         Eigen::Matrix<T, dim, 1> temp_pos;
-        for (int i = 0; i < size; ++i) {
-            if (ground.checkCollisions(mTetraMesh->mParticles.positions[i], temp_pos)) {
+        for (int j = 0; j < size; ++j) {
+            if (ground.checkCollisions(mTetraMesh->mParticles.positions[j], temp_pos)) {
                 // Update velocity if needed.
-                mTetraMesh->mParticles.velocities[i] = (temp_pos - past_pos[i]) / cTimeStep;
-                mTetraMesh->mParticles.positions[i] = temp_pos;
+                mTetraMesh->mParticles.velocities[j] = (temp_pos - past_pos[j]) / cTimeStep;
+                mTetraMesh->mParticles.positions[j] = temp_pos;
             }
         }
 
@@ -156,6 +164,7 @@ void FEMSolver<T,dim>::precomputeTetraConstants(){
             positions.push_back(mTetraMesh->mParticles.positions[t.mPIndices[i]]);
         }
         t.precompute(positions);
+        std::cout << t.mVolDmInv << std::endl;
     }
 }
 
@@ -166,7 +175,7 @@ void FEMSolver<T,dim>::computeDs(Eigen::Matrix<T,dim,dim>& Ds, const Tetrahedron
         x.push_back(mTetraMesh->mParticles.positions[t.mPIndices[i]]);
     }
     for(int i = 1; i < dim + 1; ++i){
-        Ds.col(i) = x[i] - x[0];
+        Ds.col(i - 1) = x[i] - x[0];
     }
 }
 
