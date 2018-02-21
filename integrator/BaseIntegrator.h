@@ -18,8 +18,8 @@ struct State {
     std::vector<Eigen::Matrix<T, dim, 1>> mComponentDot;
 
     State() {
-        mComponents.reserve(4);
-        mComponentDot.reserve(3);
+        mComponents.resize(4);
+        mComponentDot.resize(3);
     }
 };
 

@@ -35,7 +35,7 @@ private:
                     const Tetrahedron<T,dim>& t);       // computes F matrix
     void computeR(Eigen::Matrix<T,dim,dim>& R,
                     const Eigen::Matrix<T,dim,dim>& F); // computes R matrix from F using SVD
-    void computeFInvTran(Eigen::Matrix<T,dim,dim>& JFinvT,
+    void computeJFinvT(Eigen::Matrix<T,dim,dim>& JFinvT,
                     const Eigen::Matrix<T,dim,dim>& F); // computes det(F) * (F^-1)^T
 
 public:
@@ -76,7 +76,7 @@ void FEMSolver<T,dim>::cookMyJello() {
     // momentum conservation
     Eigen::Matrix<T,dim,1> force = Eigen::Matrix<T,dim,1>::Zero(dim);
     // det(F) * (F^-1)^T term
-    Eigen::Matrix<T,dim,dim> JFinvT = Eigen::Matrix<T,dim,1>::Zero(dim);
+    Eigen::Matrix<T,dim,dim> JFinvT = Eigen::Matrix<T,dim,dim>::Zero(dim,dim);
 
     // <<<<< Time Loop BEGIN
     for(int i = 0; i < mSteps; ++i) {
@@ -87,7 +87,8 @@ void FEMSolver<T,dim>::cookMyJello() {
             computeDs(Ds, t);
             computeF(F, Ds, t);
             computeR(R, F);
-            P = mu * (F - R) + lambda * (F.determinant() - 1) * F.determinant() * F.transpose().inverse();
+            computeJFinvT(JFinvT, F);
+            P = mu * (F - R) + lambda * (F.determinant() - 1) * JFinvT;
             P *= t.mVolDmInv;
             for(int j = 1; j < dim + 1; ++j){
                 mTetraMesh->mParticles.forces[t.mPIndices[j]] += P.col(j);
@@ -180,18 +181,30 @@ void FEMSolver<T,dim>::computeR(Eigen::Matrix<T,dim,dim>& R,
         V.col(dim - 1) = -1 * V.col(dim - 1);
     }
 
-    R = U * V.transpose();
+    R = U * (V.transpose());
 }
 
 template<class T, int dim>
-void FEMSolve<T,dim>::computeFInvTran(Eigen::Matrix<T,dim,dim>& JFinvT, const Eigen::Matrix<T,dim,dim>& F){
-    det = F.determinant();
+void FEMSolver<T,dim>::computeJFinvT(Eigen::Matrix<T,dim,dim>& JFinvT, const Eigen::Matrix<T,dim,dim>& F){
     switch(dim){
         case 2:
-            
+            JFinvT(0,0) = F(1,1);
+            JFinvT(0,1) = -F(0,1);
+            JFinvT(1,0) = -F(1,0);
+            JFinvT(1,1) = F(0,0);
             break;
         case 3:
+            JFinvT(0,0) = F(1,1)*F(2,2) - F(1,2)*F(2,1);
+            JFinvT(0,1) = F(0,2)*F(2,1) - F(0,1)*F(2,2);
+            JFinvT(0,2) = F(0,1)*F(1,2) - F(0,2)*F(1,1);
+            JFinvT(1,0) = F(1,2)*F(2,0) - F(1,0)*F(2,2);
+            JFinvT(1,1) = F(0,0)*F(2,2) - F(0,2)*F(2,0);
+            JFinvT(1,2) = F(0,2)*F(1,0) - F(0,0)*F(1,2);
+            JFinvT(2,0) = F(1,0)*F(2,1) - F(1,1)*F(2,0);
+            JFinvT(2,1) = F(0,1)*F(2,0) - F(0,0)*F(2,1);
+            JFinvT(2,2) = F(0,0)*F(1,1) - F(0,1)*F(1,0);
             break;
         default: std::cout << "error: dimension must be 2 or 3" << std::endl;
     }
+    JFinvT.transpose();
 }
