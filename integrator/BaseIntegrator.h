@@ -3,6 +3,7 @@
 #include "../globalincludes.h"
 #include <string>
 #include <vector>
+#include <../FEMSolver.h>
 
 
 const static int POS = 0;
@@ -11,11 +12,12 @@ const static int ACC = 2;
 const static int FOR = 3;
 const static int MASS = 4;
 
+template <class T, int dim>
 struct State {
     int mStateId;
     float mMass;
-    std::vector<Eigen::Vector3f> mComponents;
-    std::vector<Eigen::Vector3f> mComponentDot;
+    std::vector<Eigen::Matrix<T, dim, 1>> mComponents;
+    std::vector<Eigen::Matrix<T, dim, 1>> mComponentDot;
 
     State() {
         mComponents.reserve(4);
@@ -33,7 +35,7 @@ public:
 
     ~BaseIntegrator();
 
-    virtual void integrate(float timeStep, int params, const State &currentState, State &newState) = 0;
+    virtual void integrate(float timeStep, int params, const State<T, dim> &currentState, State<T, dim> &newState) = 0;
 
     const std::string& name() const;
 

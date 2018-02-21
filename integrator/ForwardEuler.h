@@ -9,6 +9,6 @@ public:
 
     ~ForwardEuler();
 
-    virtual void integrate(float timeStep, int params, const State &currentState, State &newState);
+    virtual void integrate(float timeStep, int params, const State<T, dim> &currentState, State<T, dim> &newState);
 
 };
