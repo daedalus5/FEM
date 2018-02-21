@@ -1,6 +1,11 @@
 #include "squareplane.h"
 
 template<class T, int dim>
+SquarePlane<T, dim>::SquarePlane() : Shape<T, dim>() {
+    center[1] = -10;
+}
+
+template<class T, int dim>
 bool SquarePlane<T, dim>::checkCollisions(Eigen::Matrix<T, dim, 1> &pos, Eigen::Matrix<T, dim, 1> &out_pos) const
 {
     //for (unsigned int i = 0; i < particles.positions.size(); ++i) {
