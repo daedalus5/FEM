@@ -95,20 +95,24 @@ void FEMSolver<T,dim>::cookMyJello() {
         // <<<<< force update END
 
         // <<<<< Integration BEGIN
-        for(Tetrahedron<T,dim> t : mTetraMesh->mTetras){
+
+        int size = mTetraMesh->mParticles.positions.size();
+
+        for(int i = 0; i < size; ++i) {
 
             State<T, dim> currState;
             State<T, dim> newState;
 
-            currState.mComponents[POS] = mTetraMesh->mParticles.positions[t.mPIndices[dim]];
-            currState.mComponents[VEL] = mTetraMesh->mParticles.velocities[t.mPIndices[dim]];
-            currState.mComponents[FOR] = mTetraMesh->mParticles.forces[t.mPIndices[dim]] + Eigen::Matrix<T,dim,1>(0, -9.8f, 0);
-            currState.mMass = mTetraMesh->mParticles.masses[t.mPIndices[dim]];
+            currState.mComponents[POS] = mTetraMesh->mParticles.positions[i];
+            currState.mComponents[VEL] = mTetraMesh->mParticles.velocities[i];
+            currState.mMass = mTetraMesh->mParticles.masses[i];
+            currState.mComponents[FOR] = mTetraMesh->mParticles.forces[i] +  Eigen::Matrix<T,dim,1>(0, -9.8f, 0) * currState.mMass;
 
             mIntegrator.integrate(cTimeStep, 0, currState, newState);
 
-            mTetraMesh->mParticles.positions[t.mPIndices[dim]] = newState.mComponents[POS];
-            mTetraMesh->mParticles.velocities[t.mPIndices[dim]] = newState.mComponents[VEL];
+            mTetraMesh->mParticles.positions[i] = newState.mComponents[POS];
+            mTetraMesh->mParticles.velocities[i] = newState.mComponents[VEL];
+
         }
         // <<<<< Integration END
 
