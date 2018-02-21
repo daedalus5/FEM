@@ -174,3 +174,16 @@ void FEMSolver<T,dim>::computeR(Eigen::Matrix<T,dim,dim>& R,
 
     R = U * V.transpose();
 }
+
+template<class T, int dim>
+void FEMSolve<T,dim>::computeFInvTran(Eigen::Matrix<T,dim,dim> F){
+    det = F.determinant();
+    switch(dim){
+        case 2:
+            
+            break;
+        case 3:
+            break;
+        default: std::cout << "error: dimension must be 2 or 3" << std::endl;
+    }
+}
