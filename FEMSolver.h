@@ -117,7 +117,7 @@ void FEMSolver<T,dim>::cookMyJello() {
             //TODO make a new function for velocity update?
         //TODO do we have dt???? -> Added a new variable called cTimeStep = 0.1
 
-        // mTetraMesh->outputFrame(frame#);
+        mTetraMesh->outputFrame(i);
     }
     // <<<<< Time Loop END
 }
