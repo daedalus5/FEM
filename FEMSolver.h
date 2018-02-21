@@ -4,6 +4,7 @@
 #include "mesh/TetraMesh.h"
 #include "mesh/Tetrahedron.h"
 #include "integrator/ForwardEuler.h"
+#include "scene/squareplane.h"
 
 
 
@@ -60,6 +61,9 @@ void FEMSolver<T,dim>::initializeMesh() {
 template<class T, int dim>
 void FEMSolver<T,dim>::cookMyJello() {
 
+    // Create a ground plane
+    SquarePlane<T, dim> ground = SquarePlane<T, dim>();
+
     // calculate deformation constants
     calculateMaterialConstants();
     // precompute tetrahedron constant values
@@ -101,6 +105,7 @@ void FEMSolver<T,dim>::cookMyJello() {
         // <<<<< Integration BEGIN
 
         int size = mTetraMesh->mParticles.positions.size();
+        std::vector<Eigen::Matrix<T, dim, 1>> past_pos = mTetraMesh->mParticles.positions;
 
         for(int i = 0; i < size; ++i) {
 
@@ -122,9 +127,14 @@ void FEMSolver<T,dim>::cookMyJello() {
         // <<<<< Integration END
 
         // collision check. Loop through particles of mTetraMesh
-            // Update velocity if needed.
-            //TODO make a new function for velocity update?
-        //TODO do we have dt???? -> Added a new variable called cTimeStep = 0.1
+        Eigen::Matrix<T, dim, 1> temp_pos;
+        for (int i = 0; i < size; ++i) {
+            if (ground.checkCollisions(mTetraMesh->mParticles.positions[i], temp_pos)) {
+                // Update velocity if needed.
+                mTetraMesh->mParticles.velocities[i] = (temp_pos - past_pos[i]) / cTimeStep;
+                mTetraMesh->mParticles.positions[i] = temp_pos;
+            }
+        }
 
         mTetraMesh->outputFrame(i);
     }
