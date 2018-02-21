@@ -6,8 +6,7 @@ ForwardEuler::ForwardEuler(std::string name) : BaseIntegrator(name) {}
 
 ForwardEuler::~ForwardEuler() {}
 
-
-void ForwardEuler::integrate(float timeStep, int params, const State &currentState, State &newState) {
+void ForwardEuler::integrate(float timeStep, int params, const State<T, dim> &currentState, State<T, dim> &newState) {
 
     if(currentState.mComponents.size() == 0) {
         return;

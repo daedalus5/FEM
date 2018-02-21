@@ -1,16 +1,19 @@
 #pragma once
 
+#include "globalincludes.h"
 #include "mesh/TetraMesh.h"
 #include "mesh/Tetrahedron.h"
+#include "integrator/ForwardEuler.h"
 
-using T = float;
-const int dim = 3;
+
 
 // values are for rubber;
 template<class T, int dim>
 double TetraMesh<T,dim>::k = 0.05;
 template<class T, int dim>
 double TetraMesh<T,dim>::nu = 0.49;
+
+constexpr float cTimeStep = 0.1f;
 
 
 template<class T, int dim>
@@ -21,6 +24,7 @@ private:
     int mSteps;
     double mu;
     double lambda;
+    ForwardEuler mIntegrator;
 
     void calculateMaterialConstants();    // calculates mu and lambda values for material
     void precomputeTetraConstants();      // precompute tetrahedron constant values
@@ -41,7 +45,7 @@ public:
 };
 
 template<class T, int dim>
-FEMSolver<T,dim>::FEMSolver(int steps) : mSteps(steps) {}
+FEMSolver<T,dim>::FEMSolver(int steps) : mSteps(steps), mIntegrator("explicit") {}
 
 template<class T, int dim>
 void FEMSolver<T,dim>::initializeMesh() {
@@ -71,7 +75,7 @@ void FEMSolver<T,dim>::cookMyJello() {
     // momentum conservation
     Eigen::Matrix<T,dim,1> force = Eigen::Matrix<T,dim,1>::Zero(dim);
 
-    for(int i = 0; i < mSteps; ++i){
+    for(int i = 0; i < mSteps; ++i) {
         mTetraMesh->mParticles.zeroForces();
         for(Tetrahedron<T,dim> t : mTetraMesh->mTetras){
             force = Eigen::Matrix<T,dim,1>::Zero(dim);
@@ -87,6 +91,31 @@ void FEMSolver<T,dim>::cookMyJello() {
             mTetraMesh->mParticles.forces[t.mPIndices[0]] += -force;
         }
         // integration step
+
+        // <<<<< Integration BEGIN
+        for(Tetrahedron<T,dim> t : mTetraMesh->mTetras){
+
+            State<T, dim> currState;
+            State<T, dim> newState;
+
+            currState.mComponents[POS] = mTetraMesh->mParticles.positions[t.mPIndices[dim]];
+            currState.mComponents[VEL] = mTetraMesh->mParticles.velocities[t.mPIndices[dim]];
+            currState.mComponents[FOR] = mTetraMesh->mParticles.forces[t.mPIndices[dim]];
+            currState.mMass = mTetraMesh->mParticles.masses[t.mPIndices[dim]];
+
+            mIntegrator.integrate(cTimeStep, 0, currState, newState);
+
+            mTetraMesh->mParticles.positions[t.mPIndices[dim]] = newState.mComponents[POS];
+            mTetraMesh->mParticles.velocities[t.mPIndices[dim]] = newState.mComponents[VEL];
+        }
+        // <<<<< Integration END
+
+
+        // collision check. Loop through particles of mTetraMesh
+            // Update velocity if needed.
+            //TODO make a new function for velocity update?
+        //TODO do we have dt???? -> Added a new variable called cTimeStep = 0.1
+
         // mTetraMesh->outputFrame(frame#);
     }
 }

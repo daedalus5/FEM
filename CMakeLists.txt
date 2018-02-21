@@ -22,6 +22,9 @@ add_cispba_executable(FEM main.cpp
         mesh/Tetrahedron.h
         utility/FileHelper.cpp
         utility/FileHelper.h
+	scene/squareplane.cpp
+        scene/squareplane.h
+        scene/shape.h
         globalincludes.h)
         
 target_include_directories(FEM SYSTEM PUBLIC ${EIGEN3_INCLUDE_DIR})
