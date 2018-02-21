@@ -13,7 +13,7 @@ double TetraMesh<T,dim>::k = 0.05;
 template<class T, int dim>
 double TetraMesh<T,dim>::nu = 0.49;
 
-constexpr float cTimeStep = 0.1f;
+constexpr float cTimeStep = 0.001f;
 
 
 template<class T, int dim>
@@ -75,8 +75,10 @@ void FEMSolver<T,dim>::cookMyJello() {
     // momentum conservation
     Eigen::Matrix<T,dim,1> force = Eigen::Matrix<T,dim,1>::Zero(dim);
 
+    // <<<<< Time Loop BEGIN
     for(int i = 0; i < mSteps; ++i) {
         mTetraMesh->mParticles.zeroForces();
+        // <<<<< force update BEGIN
         for(Tetrahedron<T,dim> t : mTetraMesh->mTetras){
             force = Eigen::Matrix<T,dim,1>::Zero(dim);
             computeDs(Ds, t);
@@ -90,7 +92,7 @@ void FEMSolver<T,dim>::cookMyJello() {
             }
             mTetraMesh->mParticles.forces[t.mPIndices[0]] += -force;
         }
-        // integration step
+        // <<<<< force update END
 
         // <<<<< Integration BEGIN
         for(Tetrahedron<T,dim> t : mTetraMesh->mTetras){
@@ -100,7 +102,7 @@ void FEMSolver<T,dim>::cookMyJello() {
 
             currState.mComponents[POS] = mTetraMesh->mParticles.positions[t.mPIndices[dim]];
             currState.mComponents[VEL] = mTetraMesh->mParticles.velocities[t.mPIndices[dim]];
-            currState.mComponents[FOR] = mTetraMesh->mParticles.forces[t.mPIndices[dim]];
+            currState.mComponents[FOR] = mTetraMesh->mParticles.forces[t.mPIndices[dim]] + Eigen::Matrix<T,dim,1>(0, -9.8f, 0);
             currState.mMass = mTetraMesh->mParticles.masses[t.mPIndices[dim]];
 
             mIntegrator.integrate(cTimeStep, 0, currState, newState);
@@ -110,7 +112,6 @@ void FEMSolver<T,dim>::cookMyJello() {
         }
         // <<<<< Integration END
 
-
         // collision check. Loop through particles of mTetraMesh
             // Update velocity if needed.
             //TODO make a new function for velocity update?
@@ -118,6 +119,7 @@ void FEMSolver<T,dim>::cookMyJello() {
 
         // mTetraMesh->outputFrame(frame#);
     }
+    // <<<<< Time Loop END
 }
 
 template<class T, int dim>
@@ -144,8 +146,8 @@ void FEMSolver<T,dim>::computeDs(Eigen::Matrix<T,dim,dim>& Ds, const Tetrahedron
     for(int i = 0; i < dim + 1; ++i){
         x.push_back(mTetraMesh->mParticles.positions[t.mPIndices[i]]);
     }
-    for(int i = 0; i < dim; ++i){
-        Ds.col(i) = x[i] - x.back();
+    for(int i = 1; i < dim + 1; ++i){
+        Ds.col(i) = x[i] - x[0];
     }
 }
 

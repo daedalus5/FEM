@@ -37,8 +37,8 @@ Tetrahedron<T,dim>::~Tetrahedron(){}
 template<class T, int dim>
 void Tetrahedron<T,dim>::precompute(const std::vector<Eigen::Matrix<T,dim,1>>& x){
     Eigen::Matrix<T,dim,dim> Dm;
-    for(int i = 0; i < dim; ++i){
-        Dm.col(i) = x[i] - x.back();
+    for(int i = 1; i < dim + 1; ++i){
+        Dm.col(i) = x[i] - x[0];
     }
     switch(dim){
         case 2: volume = Dm.determinant() / 2; break;
