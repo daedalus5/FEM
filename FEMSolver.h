@@ -73,21 +73,15 @@ void FEMSolver<T,dim>::cookMyJello() {
         t.precompute(positions);
     }
 
+    Eigen::Matrix<T,dim,dim> F;
+    F.Zero(dim,dim);
+
     for(int i = 0; i < mSteps; ++i){
         mTetraMesh->mParticles.zeroForces();
         for(Tetrahedron<T,dim> t : mTetraMesh->mTetras){
 
         }
     }
-    // time loop
-        // zero forces
-        // compute forces
-    // end loop
-
-    // time loop
-        // update particles
-        // write particle data
-    // end loop
 }
 
 template<class T, int dim>

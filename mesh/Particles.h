@@ -23,7 +23,7 @@ public:
 	~Particles();
 
     void zeroForces();
-	void write_data_bgeo(const std::string& s);
+	void write_data_bgeo(const std::string& s, int frame);
 };
 
 template<class T, int dim>
@@ -42,8 +42,8 @@ void Particles<T,dim>::zeroForces(){
 }
 
 template<class T, int dim>
-void Particles<T,dim>::write_data_bgeo(const std::string& s){
-	std::string file = s + std::to_string(Particles::n) + ".bgeo";
+void Particles<T,dim>::write_data_bgeo(const std::string& s, int frame){
+	std::string file = s + std::to_string(frame) + ".bgeo";
     Partio::ParticlesDataMutable* parts = Partio::create();
     Partio::ParticleAttribute posH, vH, mH;
     mH = parts->addAttribute("m", Partio::VECTOR, 1);
