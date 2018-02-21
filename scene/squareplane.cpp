@@ -1,19 +1,34 @@
 #include "squareplane.h"
 
-bool SquarePlane::Intersect(const Ray &ray, Intersection *isect) const
+template<class T, int dim>
+bool SquarePlane<T, dim>::checkCollisions(Eigen::Matrix<T, dim, 1> &pos, Eigen::Matrix<T, dim, 1> &out_pos) const
 {
-    //Transform the ray
-    Ray r_loc = ray.GetTransformedCopy(transform.invT());
+    //for (unsigned int i = 0; i < particles.positions.size(); ++i) {
 
-    //Ray-plane intersection
-    float t = glm::dot(glm::vec3(0,0,1), (glm::vec3(0.5f, 0.5f, 0) - r_loc.origin)) / glm::dot(glm::vec3(0,0,1), r_loc.direction);
-    Point3f P = Point3f(t * r_loc.direction + r_loc.origin);
-    //Check that P is within the bounds of the square
-    if(t > 0 && P.x >= -0.5f && P.x <= 0.5f && P.y >= -0.5f && P.y <= 0.5f)
-    {
-        InitializeIntersection(isect, t, P);
-        return true;
-    }
+        // If particle is under plane
+        if (pos[1] < center[1]) {
+
+            // Check if x, z is within plane
+            if (Eigen::abs(pos[0] - center[0]) < length_half
+                || (dim == 3 && Eigen::abs(pos[2] - center[2]) < length_half)) {
+                //TODO is there a better way to see if this is 2D or 3D?
+
+                // Collision
+                // Move particle out of plane
+                //particles.positions[i][1] = center[1];
+                // Update velocity?
+                //TODO
+                out_pos[0] = pos[0];
+                out_pos[1] = center[1];
+                if (dim == 3) {
+                    out_pos[2] = pos[2];
+                }
+                return true;
+
+            }
+
+        }
+    //}
     return false;
 }
 
