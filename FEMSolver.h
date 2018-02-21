@@ -35,7 +35,8 @@ private:
                     const Tetrahedron<T,dim>& t);       // computes F matrix
     void computeR(Eigen::Matrix<T,dim,dim>& R,
                     const Eigen::Matrix<T,dim,dim>& F); // computes R matrix from F using SVD
-    void computeFInvTran(Eigen::Matrix<T,dim,dim> F);   // computes det(F) * (F^-1)^T
+    void computeFInvTran(Eigen::Matrix<T,dim,dim>& JFinvT,
+                    const Eigen::Matrix<T,dim,dim>& F); // computes det(F) * (F^-1)^T
 
 public:
     FEMSolver(int steps);
@@ -74,6 +75,8 @@ void FEMSolver<T,dim>::cookMyJello() {
     Eigen::Matrix<T,dim,dim> P = Eigen::Matrix<T,dim,dim>::Zero(dim,dim);
     // momentum conservation
     Eigen::Matrix<T,dim,1> force = Eigen::Matrix<T,dim,1>::Zero(dim);
+    // det(F) * (F^-1)^T term
+    Eigen::Matrix<T,dim,dim> JFinvT = Eigen::Matrix<T,dim,1>::Zero(dim);
 
     // <<<<< Time Loop BEGIN
     for(int i = 0; i < mSteps; ++i) {
@@ -110,6 +113,7 @@ void FEMSolver<T,dim>::cookMyJello() {
             mTetraMesh->mParticles.positions[t.mPIndices[dim]] = newState.mComponents[POS];
             mTetraMesh->mParticles.velocities[t.mPIndices[dim]] = newState.mComponents[VEL];
         }
+
         // <<<<< Integration END
 
         // collision check. Loop through particles of mTetraMesh
@@ -176,7 +180,7 @@ void FEMSolver<T,dim>::computeR(Eigen::Matrix<T,dim,dim>& R,
 }
 
 template<class T, int dim>
-void FEMSolve<T,dim>::computeFInvTran(Eigen::Matrix<T,dim,dim> F){
+void FEMSolve<T,dim>::computeFInvTran(Eigen::Matrix<T,dim,dim>& JFinvT, const Eigen::Matrix<T,dim,dim>& F){
     det = F.determinant();
     switch(dim){
         case 2:
