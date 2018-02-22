@@ -19,7 +19,7 @@ class SquarePlane : public Shape<T, dim>
 
 template<class T, int dim>
 SquarePlane<T, dim>::SquarePlane() : Shape<T, dim>() {
-    center[1] = -1;
+    center[1] = -1.0;
 }
 
 template<class T, int dim>
@@ -43,7 +43,7 @@ bool SquarePlane<T, dim>::checkCollisions(Eigen::Matrix<T, dim, 1> &pos, Eigen::
                 // fill out_pos with new position
                 // Some function outside this will calculate velocity
                 out_pos[0] = pos[0];
-                out_pos[1] = center[1];
+                out_pos[1] = center[1] + .01;
                 if (dim == 3) {
                     out_pos[2] = pos[2];
                 }
