@@ -94,10 +94,11 @@ void TetraMesh<T,dim>::generateTetras(){
 template<class T, int dim>
 void TetraMesh<T,dim>::outputFrame(int frame){
     Partio::ParticlesDataMutable* parts = Partio::create();
-       Partio::ParticleAttribute posH, vH, mH;
+       Partio::ParticleAttribute posH, vH, mH, fH;
        mH = parts->addAttribute("m", Partio::VECTOR, 1);
        posH = parts->addAttribute("position", Partio::VECTOR, 3);
        vH = parts->addAttribute("v", Partio::VECTOR, 3);
+       fH = parts->addAttribute("f", Partio::VECTOR, 3);
 
        // iterate through the particles
           for (unsigned int i=0; i<this->mParticles.positions.size(); i++){
@@ -105,11 +106,14 @@ void TetraMesh<T,dim>::outputFrame(int frame){
              float* m = parts->dataWrite<float>(mH, idx);
              float* p = parts->dataWrite<float>(posH, idx);
              float* v = parts->dataWrite<float>(vH, idx);
+             float* f = parts->dataWrite<float>(fH, idx);
              m[0] = this->mParticles.masses[i];
              for (int k = 0; k < 3; k++)
                  p[k] = this->mParticles.positions[i][k];
              for (int k = 0; k < 3; k++)
                  v[k] = this->mParticles.velocities[i][k];
+             for (int k = 0; k < 3; k++)
+                 f[k] = this->mParticles.forces[i][k];
           }
 
           // write frames to .bgeo file

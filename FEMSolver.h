@@ -10,7 +10,7 @@
 
 // values are for rubber;
 template<class T, int dim>
-double TetraMesh<T,dim>::k = 100.0;
+double TetraMesh<T,dim>::k = 1.0;
 template<class T, int dim>
 double TetraMesh<T,dim>::nu = 0.49;
 
@@ -52,7 +52,7 @@ FEMSolver<T,dim>::FEMSolver(int steps) : mTetraMesh(nullptr), mSteps(steps), mu(
 
 template<class T, int dim>
 FEMSolver<T,dim>::~FEMSolver(){
-    delete mTetraMesh;
+    //delete mTetraMesh;
 }
 
 template<class T, int dim>
@@ -86,6 +86,10 @@ void FEMSolver<T,dim>::cookMyJello() {
     Eigen::Matrix<T,dim,1> force = Eigen::Matrix<T,dim,1>::Zero(dim);
     // det(F) * (F^-1)^T term
     Eigen::Matrix<T,dim,dim> JFinvT = Eigen::Matrix<T,dim,dim>::Zero(dim,dim);
+
+    for(Tetrahedron<T,dim> &t : mTetraMesh->mTetras){
+        std::cout << t.mVolDmInv << std::endl;
+    }
 
     // <<<<< Time Loop BEGIN
     for(int i = 0; i < mSteps; ++i) {
