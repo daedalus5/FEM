@@ -10,11 +10,11 @@
 
 // values are for rubber;
 template<class T, int dim>
-double TetraMesh<T,dim>::k = 0.05;
+double TetraMesh<T,dim>::k = 100.0;
 template<class T, int dim>
-double TetraMesh<T,dim>::nu = 0.49;
+double TetraMesh<T,dim>::nu = 0.1;
 
-constexpr float cTimeStep = 0.001f;
+constexpr float cTimeStep = 0.0001f;
 
 
 template<class T, int dim>
@@ -82,6 +82,8 @@ void FEMSolver<T,dim>::cookMyJello() {
     Eigen::Matrix<T,dim,dim> R = Eigen::Matrix<T,dim,dim>::Zero(dim,dim);
     // Piola stress tensor
     Eigen::Matrix<T,dim,dim> P = Eigen::Matrix<T,dim,dim>::Zero(dim,dim);
+    // Force matrix
+    Eigen::Matrix<T,dim,dim> G = Eigen::Matrix<T,dim,dim>::Zero(dim,dim);
     // momentum conservation
     Eigen::Matrix<T,dim,1> force = Eigen::Matrix<T,dim,1>::Zero(dim);
     // det(F) * (F^-1)^T term
@@ -98,15 +100,18 @@ void FEMSolver<T,dim>::cookMyJello() {
             computeR(R, F);
             computeJFinvT(JFinvT, F);
             P = mu * (F - R) + lambda * (F.determinant() - 1) * JFinvT;
-            P *= t.mVolDmInv;
+            G = P * t.mVolDmInvT;
             // if(i == 600){
             //     std::cout << P << std::endl;
             // }
             for(int j = 1; j < dim + 1; ++j){
-                mTetraMesh->mParticles.forces[t.mPIndices[j]] += P.col(j - 1);
-                force += P.col(j - 1);
+                mTetraMesh->mParticles.forces[t.mPIndices[j]] += G.col(j - 1);
+                force += G.col(j - 1);
             }
             mTetraMesh->mParticles.forces[t.mPIndices[0]] += -force;
+            if(i > 500){
+                //std::cout << force[1] << std::endl;
+            }
         }
         // <<<<< force update END
 
@@ -127,7 +132,7 @@ void FEMSolver<T,dim>::cookMyJello() {
             currState.mComponents[POS] = mTetraMesh->mParticles.positions[j];
             currState.mComponents[VEL] = mTetraMesh->mParticles.velocities[j];
             currState.mMass = mTetraMesh->mParticles.masses[j];
-            currState.mComponents[FOR] = mTetraMesh->mParticles.forces[j] +  Eigen::Matrix<T,dim,1>(0, -9.8f, 0) * currState.mMass;
+            currState.mComponents[FOR] = mTetraMesh->mParticles.forces[j] / currState.mMass + Eigen::Matrix<T,dim,1>(0, -9.8f, 0);
 
             mIntegrator.integrate(cTimeStep, 0, currState, newState);
 
@@ -155,8 +160,8 @@ void FEMSolver<T,dim>::cookMyJello() {
 
 template<class T, int dim>
 void FEMSolver<T,dim>::calculateMaterialConstants(){
-    mu = TetraMesh<T,dim>::k / (1. + TetraMesh<T,dim>::nu);
-    lambda = TetraMesh<T,dim>::k * TetraMesh<T,dim>::nu / ((1. + TetraMesh<T,dim>::nu)*(1. - 2*TetraMesh<T,dim>::nu));
+    mu = TetraMesh<T,dim>::k / (2 * (1. + TetraMesh<T,dim>::nu));
+    lambda = (TetraMesh<T,dim>::k * TetraMesh<T,dim>::nu) / ((1. + TetraMesh<T,dim>::nu)*(1. - 2*TetraMesh<T,dim>::nu));
 }
 
 template<class T, int dim>

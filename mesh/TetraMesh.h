@@ -54,7 +54,7 @@ void TetraMesh<T,dim>::generateTetras(){
                     instream >> x1 >> x2 >> x3 >> x4;
                     this->mParticles.positions.push_back(Eigen::Matrix<T,dim,1>(x2,x3,x4));
                     this->mParticles.velocities.push_back(Eigen::Matrix<T,dim,1>(0.0,0.0,0.0));
-                    this->mParticles.masses.push_back(1.0);
+                    this->mParticles.masses.push_back(0.01);
                     this->mParticles.forces.push_back(Eigen::Matrix<T,dim,1>(0.0,0.0,0.0));
                     this->mParticles.drags.push_back(Eigen::Matrix<T,dim,1>(0.0,0.0,0.0));
             }
@@ -101,7 +101,7 @@ void TetraMesh<T,dim>::outputFrame(int frame){
        fH = parts->addAttribute("f", Partio::VECTOR, 3);
 
        // iterate through the particles
-          for (unsigned int i=0; i<this->mParticles.positions.size(); i++){
+          for (unsigned int i=0; i < this->mParticles.positions.size(); i++){
              int idx = parts->addParticle();
              float* m = parts->dataWrite<float>(mH, idx);
              float* p = parts->dataWrite<float>(posH, idx);
@@ -120,8 +120,10 @@ void TetraMesh<T,dim>::outputFrame(int frame){
           std::string f = std::to_string(frame);
           std::string particleFile = "";
           if(f.length() == 1)
-             particleFile = "frame00" + f +".bgeo";
+             particleFile = "frame000" + f +".bgeo";
           else if(f.length() == 2)
+             particleFile = "frame00" + f +".bgeo";
+          else if(f.length() == 3)
              particleFile = "frame0" + f +".bgeo";
           else
              particleFile = "frame" + f +".bgeo";

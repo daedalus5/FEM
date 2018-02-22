@@ -16,7 +16,7 @@ void ForwardEuler::integrate(float timeStep, int params, const State<T, dim> &cu
     newState.mComponentDot[POS] = currentState.mComponents[VEL];
 
     // Derivative of velocity is = F/m (from Newtons second law)
-    newState.mComponentDot[VEL] = currentState.mComponents[FOR] / currentState.mMass;
+    newState.mComponentDot[VEL] = currentState.mComponents[FOR];
 
     // Calculate the new positions and velocity
     newState.mComponents[POS] = currentState.mComponents[POS] + newState.mComponentDot[POS] * timeStep;
