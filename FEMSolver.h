@@ -10,12 +10,15 @@
 
 // values are for rubber;
 template<class T, int dim>
-double TetraMesh<T,dim>::k = 100.0;
+double TetraMesh<T,dim>::k = 10000.0;
 template<class T, int dim>
-double TetraMesh<T,dim>::nu = 0.1;
+double TetraMesh<T,dim>::nu = 0.3;
 
-constexpr float cTimeStep = 0.0001f;
+constexpr float cTimeStep = 0.001f;
 
+// 24 frames per second
+// mesh resolution
+// try outputting poly file to see tetrahedra deform
 
 template<class T, int dim>
 class FEMSolver {
@@ -100,6 +103,7 @@ void FEMSolver<T,dim>::cookMyJello() {
             computeR(R, F);
             computeJFinvT(JFinvT, F);
             P = mu * (F - R) + lambda * (F.determinant() - 1) * JFinvT;
+            //std::cout << P << std::endl;
             G = P * t.mVolDmInvT;
             // if(i == 600){
             //     std::cout << P << std::endl;
@@ -148,7 +152,9 @@ void FEMSolver<T,dim>::cookMyJello() {
         for (int j = 0; j < size; ++j) {
             if (ground.checkCollisions(mTetraMesh->mParticles.positions[j], temp_pos)) {
                 // Update velocity if needed.
-                mTetraMesh->mParticles.velocities[j] = (temp_pos - past_pos[j]) / cTimeStep;
+                if(mTetraMesh->mParticles.velocities[j][1] < 0){
+                    mTetraMesh->mParticles.velocities[j] = Eigen::Matrix<T,dim,1>(0,0,0);//(temp_pos - past_pos[j]) / cTimeStep;
+                }
                 mTetraMesh->mParticles.positions[j] = temp_pos;
             }
         }
@@ -192,6 +198,7 @@ void FEMSolver<T,dim>::computeF(Eigen::Matrix<T,dim,dim>& F,
                     const Eigen::Matrix<T,dim,dim>& Ds,
                     const Tetrahedron<T,dim>& t){
     F = Ds * t.mDmInv;
+    //std::cout << F << std::endl;
 }
 
 template<class T, int dim>
@@ -209,6 +216,7 @@ void FEMSolver<T,dim>::computeR(Eigen::Matrix<T,dim,dim>& R,
     }
 
     R = U * V.transpose();
+    //std::cout << R << std::endl;
 }
 
 template<class T, int dim>
@@ -216,22 +224,23 @@ void FEMSolver<T,dim>::computeJFinvT(Eigen::Matrix<T,dim,dim>& JFinvT, const Eig
     switch(dim){
         case 2:
             JFinvT(0,0) = F(1,1);
-            JFinvT(0,1) = -F(0,1);
             JFinvT(1,0) = -F(1,0);
+            JFinvT(0,1) = -F(0,1);
             JFinvT(1,1) = F(0,0);
             break;
         case 3:
-            JFinvT(0,0) = F(1,1)*F(2,2) - F(1,2)*F(2,1);
-            JFinvT(0,1) = F(0,2)*F(2,1) - F(0,1)*F(2,2);
-            JFinvT(0,2) = F(0,1)*F(1,2) - F(0,2)*F(1,1);
-            JFinvT(1,0) = F(1,2)*F(2,0) - F(1,0)*F(2,2);
-            JFinvT(1,1) = F(0,0)*F(2,2) - F(0,2)*F(2,0);
-            JFinvT(1,2) = F(0,2)*F(1,0) - F(0,0)*F(1,2);
-            JFinvT(2,0) = F(1,0)*F(2,1) - F(1,1)*F(2,0);
-            JFinvT(2,1) = F(0,1)*F(2,0) - F(0,0)*F(2,1);
-            JFinvT(2,2) = F(0,0)*F(1,1) - F(0,1)*F(1,0);
+            JFinvT(0,0) = F(1,1)*F(2,2) - F(2,1)*F(1,2);
+            JFinvT(1,0) = F(2,0)*F(1,2) - F(1,0)*F(2,2);
+            JFinvT(2,0) = F(1,0)*F(2,1) - F(2,0)*F(1,1);
+            JFinvT(0,1) = F(2,1)*F(0,2) - F(0,1)*F(2,2);
+            JFinvT(1,1) = F(0,0)*F(2,2) - F(2,0)*F(0,2);
+            JFinvT(2,1) = F(2,0)*F(0,1) - F(0,0)*F(2,1);
+            JFinvT(0,2) = F(0,1)*F(1,2) - F(1,1)*F(0,2);
+            JFinvT(1,2) = F(1,0)*F(0,2) - F(0,0)*F(1,2);
+            JFinvT(2,2) = F(0,0)*F(1,1) - F(1,0)*F(0,1);
             break;
         default: std::cout << "error: dimension must be 2 or 3" << std::endl;
     }
-    JFinvT.transpose();
+    JFinvT = JFinvT.transpose();
+    //std::cout << JFinvT << std::endl;
 }
