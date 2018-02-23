@@ -11,10 +11,11 @@
 template<class T, int dim>
 class Tetrahedron{
 public:
-	std::vector<int> mPIndices;        // tetrahedron vertices
-    Eigen::Matrix<T,dim,dim> mDmInv;   // rest configuration Dm inverse
-    T volume;                          // volume of tetrahedron in rest configuration
+	std::vector<int> mPIndices;         // tetrahedron vertices
+    Eigen::Matrix<T,dim,dim> mDmInv;    // rest configuration Dm inverse
+    T volume;                           // volume of tetrahedron in rest configuration
     Eigen::Matrix<T,dim,dim> mVolDmInvT;// volume * Dm inverse
+    T mass;                             // mass of the tetrahedron
 
 	Tetrahedron(const std::vector<int>& indices);
 	~Tetrahedron();
@@ -29,7 +30,8 @@ Tetrahedron<T,dim>::Tetrahedron(const std::vector<int>& indices) :
                                 mPIndices(indices),
                                 mDmInv(Eigen::Matrix<T,dim,dim>::Zero(dim, dim)),
                                 volume(0.0),
-                                mVolDmInvT(Eigen::Matrix<T,dim,dim>::Zero(dim, dim)) {}
+                                mVolDmInvT(Eigen::Matrix<T,dim,dim>::Zero(dim, dim)),
+                                mass(0.0) {}
 
 template<class T, int dim>
 Tetrahedron<T,dim>::~Tetrahedron(){}
@@ -52,6 +54,7 @@ void Tetrahedron<T,dim>::precompute(const std::vector<Eigen::Matrix<T,dim,1>>& x
         std::cout << "bad tetrahedron" << std::endl;
     }
     mVolDmInvT = -1 * volume * mDmInv.transpose();
+    mass = 1000 * volume; // density is 1000
 }
 
 template<class T, int dim>

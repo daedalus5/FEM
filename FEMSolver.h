@@ -41,6 +41,7 @@ private:
                     const Eigen::Matrix<T,dim,dim>& F); // computes R matrix from F using SVD
     void computeJFinvT(Eigen::Matrix<T,dim,dim>& JFinvT,
                     const Eigen::Matrix<T,dim,dim>& F); // computes det(F) * (F^-1)^T
+    void distributeMass();          // distributes tetrahedron mass to its constituent particles
 
 public:
     FEMSolver(int steps);
@@ -76,6 +77,8 @@ void FEMSolver<T,dim>::cookMyJello() {
     calculateMaterialConstants();
     // precompute tetrahedron constant values
     precomputeTetraConstants();
+    // distribute mass to tetrahedra particles
+    distributeMass();
 
     // deformation gradient matrix
     Eigen::Matrix<T,dim,dim> F = Eigen::Matrix<T,dim,dim>::Zero(dim,dim);
@@ -240,4 +243,14 @@ void FEMSolver<T,dim>::computeJFinvT(Eigen::Matrix<T,dim,dim>& JFinvT, const Eig
         default: std::cout << "error: dimension must be 2 or 3" << std::endl;
     }
     JFinvT = JFinvT.transpose();
+}
+
+template<class T, int dim>
+void FEMSolver<T,dim>::distributeMass(){
+    for(Tetrahedron<T,dim> &t : mTetraMesh->mTetras){
+        for(int i = 0; i < dim + 1; ++i){
+            // distribute 1/4 of mass to each tetrahedron point
+            mTetraMesh->mParticles.masses[t.mPIndices[i]] += 0.25 * t.mass;
+        }
+    }
 }

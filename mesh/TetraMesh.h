@@ -23,9 +23,6 @@ public:
     std::vector<Tetrahedron<T,dim>> mTetras;
 };
 
-// compute volume for each tetrahedron
-// jello density 1000
-
 template<class T, int dim>
 TetraMesh<T,dim>::TetraMesh(std::string s) : Mesh<T,dim>(s) {}
 
@@ -57,7 +54,7 @@ void TetraMesh<T,dim>::generateTetras(){
                     instream >> x1 >> x2 >> x3 >> x4;
                     this->mParticles.positions.push_back(Eigen::Matrix<T,dim,1>(x2,x3,x4));
                     this->mParticles.velocities.push_back(Eigen::Matrix<T,dim,1>(0.0,0.0,0.0));
-                    this->mParticles.masses.push_back(1.0);
+                    this->mParticles.masses.push_back(0.0);
                     this->mParticles.forces.push_back(Eigen::Matrix<T,dim,1>(0.0,0.0,0.0));
                     this->mParticles.drags.push_back(Eigen::Matrix<T,dim,1>(0.0,0.0,0.0));
             }
