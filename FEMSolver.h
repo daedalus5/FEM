@@ -113,20 +113,14 @@ void FEMSolver<T,dim>::cookMyJello() {
                 force += G.col(j - 1);
             }
             mTetraMesh->mParticles.forces[t.mPIndices[0]] += -force;
-            if(i > 500){
-                //std::cout << force[1] << std::endl;
-            }
         }
         // <<<<< force update END
 
         // <<<<< Integration BEGIN
 
         int size = mTetraMesh->mParticles.positions.size();
-        std::vector<Eigen::Matrix<T, dim, 1>> past_pos = mTetraMesh->mParticles.positions;
-
-        // if(i == 600){
-        //     std::cout << mTetraMesh->mParticles.forces[5] << std::endl;
-        // }
+        std::vector<Eigen::Matrix<T, dim, 1>> past_pos(mTetraMesh->mParticles.positions);
+        Eigen::Matrix<T, dim, 1> temp_pos;
 
         for(int j = 0; j < size; ++j) {
 
@@ -140,6 +134,12 @@ void FEMSolver<T,dim>::cookMyJello() {
 
             mIntegrator.integrate(cTimeStep, 0, currState, newState);
 
+            if(ground.checkCollisions(newState.mComponents[POS], temp_pos)){
+                if(newState.mComponents[VEL][1] < 0){
+                    newState.mComponents[VEL][1] = 0;
+                }
+                newState.mComponents[POS] = currState.mComponents[POS];
+            }
             mTetraMesh->mParticles.positions[j] = newState.mComponents[POS];
             mTetraMesh->mParticles.velocities[j] = newState.mComponents[VEL];
 
@@ -148,16 +148,16 @@ void FEMSolver<T,dim>::cookMyJello() {
         // <<<<< Integration END
 
         // collision check. Loop through particles of mTetraMesh
-        Eigen::Matrix<T, dim, 1> temp_pos;
-        for (int j = 0; j < size; ++j) {
-            if (ground.checkCollisions(mTetraMesh->mParticles.positions[j], temp_pos)) {
-                // Update velocity if needed.
-                if(mTetraMesh->mParticles.velocities[j][1] < 0){
-                    mTetraMesh->mParticles.velocities[j] = Eigen::Matrix<T,dim,1>(0,0,0);//(temp_pos - past_pos[j]) / cTimeStep;
-                }
-                mTetraMesh->mParticles.positions[j] = temp_pos;
-            }
-        }
+        // Eigen::Matrix<T, dim, 1> temp_pos;
+        // for (int j = 0; j < size; ++j) {
+        //     if (ground.checkCollisions(mTetraMesh->mParticles.positions[j], temp_pos)) {
+        //         // Update velocity if needed.
+        //         if(mTetraMesh->mParticles.velocities[j][1] < 0){
+        //             mTetraMesh->mParticles.velocities[j] = Eigen::Matrix<T,dim,1>(0,0,0);//(temp_pos - past_pos[j]) / cTimeStep;
+        //         }
+        //         mTetraMesh->mParticles.positions[j] = past_pos[j];
+        //     }
+        // }
 
         mTetraMesh->outputFrame(i);
     }
@@ -198,7 +198,6 @@ void FEMSolver<T,dim>::computeF(Eigen::Matrix<T,dim,dim>& F,
                     const Eigen::Matrix<T,dim,dim>& Ds,
                     const Tetrahedron<T,dim>& t){
     F = Ds * t.mDmInv;
-    //std::cout << F << std::endl;
 }
 
 template<class T, int dim>
@@ -216,7 +215,6 @@ void FEMSolver<T,dim>::computeR(Eigen::Matrix<T,dim,dim>& R,
     }
 
     R = U * V.transpose();
-    //std::cout << R << std::endl;
 }
 
 template<class T, int dim>
@@ -242,5 +240,4 @@ void FEMSolver<T,dim>::computeJFinvT(Eigen::Matrix<T,dim,dim>& JFinvT, const Eig
         default: std::cout << "error: dimension must be 2 or 3" << std::endl;
     }
     JFinvT = JFinvT.transpose();
-    //std::cout << JFinvT << std::endl;
 }
