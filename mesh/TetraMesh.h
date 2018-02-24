@@ -33,6 +33,15 @@ template<class T, int dim>
 void TetraMesh<T,dim>::generateTetras(){
     std::ifstream instream; //input file stream
 
+    // output to a poly file for debugging
+    std::ofstream outFile;
+    outFile.open("out.poly");
+    if (!outFile) {
+        std::cerr << "Unable to open file out.poly";
+        exit(1);
+    }
+    outFile << "POINTS\n\n";
+
     // .NODE FILE
     // 	list of vertices
             instream.open(this->filepath+".node");
@@ -57,6 +66,8 @@ void TetraMesh<T,dim>::generateTetras(){
                     this->mParticles.masses.push_back(0.0);
                     this->mParticles.forces.push_back(Eigen::Matrix<T,dim,1>(0.0,0.0,0.0));
                     this->mParticles.drags.push_back(Eigen::Matrix<T,dim,1>(0.0,0.0,0.0));
+
+                    outFile << x1 << ": " << x2 << " " << x3 << " " << x4 << "\n";
             }
             instream.close();
 
@@ -68,6 +79,8 @@ void TetraMesh<T,dim>::generateTetras(){
                    std::cout << "ERROR" << std::endl;
                    exit(1);
             }
+
+            outFile << "\nPOLYS\n\n";
 
             getline(instream, line);
             const char *t = &line[0];
@@ -87,8 +100,15 @@ void TetraMesh<T,dim>::generateTetras(){
                     Tetrahedron<T, dim> tet(indices);
                     this->mTetras.push_back(tet);
                     indices.clear();
+
+                    outFile << (i * 3) + 1 <<": " << b << " " << c << " " << d << " " << b << "\n";
+                    outFile << (i * 3) + 2 <<": " << b << " " << e << " " << d << "\n";
+                    outFile << (i * 3) + 3 <<": " << c << " " << e << "\n";
             }
             instream.close();
+
+    outFile << "\nEND";
+    outFile.close();
 }
 
 template<class T, int dim>
