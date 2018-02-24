@@ -48,3 +48,6 @@ output/*
 .DS_Store
 
 .idea/*
+
+# our executable
+FEM
