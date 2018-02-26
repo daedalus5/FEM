@@ -10,7 +10,7 @@
 
 // values are for rubber;
 template<class T, int dim>
-double TetraMesh<T,dim>::k = 100.0;
+double TetraMesh<T,dim>::k = 1000.0;
 template<class T, int dim>
 double TetraMesh<T,dim>::nu = 0.2;
 
@@ -71,7 +71,7 @@ template<class T, int dim>
 void FEMSolver<T,dim>::cookMyJello() {
 
     // Create a ground plane
-    //SquarePlane<T, dim> ground = SquarePlane<T, dim>();
+    SquarePlane<T, dim> ground = SquarePlane<T, dim>();
 
     // calculate deformation constants
     calculateMaterialConstants();
@@ -101,11 +101,11 @@ void FEMSolver<T,dim>::cookMyJello() {
 
     int size = mTetraMesh->mParticles.positions.size();
     //std::vector<Eigen::Matrix<T, dim, 1>> past_pos(mTetraMesh->mParticles.positions);
-    //Eigen::Matrix<T, dim, 1> temp_pos = Eigen::Matrix<T,dim,1>::Zero(dim);
+    Eigen::Matrix<T, dim, 1> temp_pos = Eigen::Matrix<T,dim,1>::Zero(dim);
 
-    for(int i = 0; i < size; ++i){
-        mTetraMesh->mParticles.positions[i] *= 0.75;
-    }
+    // for(int i = 0; i < size; ++i){
+    //     mTetraMesh->mParticles.positions[i] *= 0.75;
+    // }
 
     // <<<<< Time Loop BEGIN
     for(int i = 0; i < mSteps; ++i) {
@@ -123,8 +123,10 @@ void FEMSolver<T,dim>::cookMyJello() {
             G = P * t.mVolDmInvT;
 
             for(int j = 1; j < dim + 1; ++j){
-                mTetraMesh->mParticles.forces[t.mPIndices[j]] += G.col(j - 1);
-                force += G.col(j - 1);
+                if(G.col(j - 1).norm() > 1E-10){
+                    mTetraMesh->mParticles.forces[t.mPIndices[j]] += G.col(j - 1);
+                    force += G.col(j - 1);
+                }
             }
             mTetraMesh->mParticles.forces[t.mPIndices[0]] += -force;
         }
@@ -134,7 +136,7 @@ void FEMSolver<T,dim>::cookMyJello() {
 
         for(int j = 0; j < size; ++j) {
 
-            //temp_pos = Eigen::Matrix<T,dim,1>::Zero(dim);
+            temp_pos = Eigen::Matrix<T,dim,1>::Zero(dim);
 
             State<T, dim> currState;
             State<T, dim> newState;
@@ -142,18 +144,18 @@ void FEMSolver<T,dim>::cookMyJello() {
             currState.mComponents[POS] = mTetraMesh->mParticles.positions[j];
             currState.mComponents[VEL] = mTetraMesh->mParticles.velocities[j];
             currState.mMass = mTetraMesh->mParticles.masses[j];
-            //currState.mComponents[FOR] = mTetraMesh->mParticles.forces[j] / currState.mMass + Eigen::Matrix<T,dim,1>(0, -9.8f, 0);
-            currState.mComponents[FOR] = mTetraMesh->mParticles.forces[j] / currState.mMass;
+            currState.mComponents[FOR] = mTetraMesh->mParticles.forces[j] / currState.mMass + Eigen::Matrix<T,dim,1>(0, -0.1f, 0);
+            //currState.mComponents[FOR] = mTetraMesh->mParticles.forces[j] / currState.mMass;
 
             mIntegrator.integrate(cTimeStep, 0, currState, newState);
 
-            // if(ground.checkCollisions(newState.mComponents[POS], temp_pos)){
-            //     if(newState.mComponents[VEL][1] < 0){
-            //         newState.mComponents[VEL][1] = 0;
-            //     }
-            //     //newState.mComponents[POS] = currState.mComponents[POS];
-            //     newState.mComponents[POS] = temp_pos;
-            // }
+            if(ground.checkCollisions(newState.mComponents[POS], temp_pos)){
+                if(newState.mComponents[VEL][1] < 0){
+                    newState.mComponents[VEL][1] = 0;
+                }
+                //newState.mComponents[POS] = currState.mComponents[POS];
+                newState.mComponents[POS] = temp_pos;
+            }
             mTetraMesh->mParticles.positions[j] = newState.mComponents[POS];
             mTetraMesh->mParticles.velocities[j] = newState.mComponents[VEL];
 
@@ -236,20 +238,20 @@ void FEMSolver<T,dim>::computeJFinvT(Eigen::Matrix<T,dim,dim>& JFinvT, const Eig
     switch(dim){
         case 2:
             JFinvT(0,0) = F(1,1);
-            JFinvT(1,0) = -F(1,0);
             JFinvT(0,1) = -F(0,1);
+            JFinvT(1,0) = -F(1,0);
             JFinvT(1,1) = F(0,0);
             break;
         case 3:
-            JFinvT(0,0) = F(1,1)*F(2,2) - F(2,1)*F(1,2);
-            JFinvT(1,0) = F(2,0)*F(1,2) - F(1,0)*F(2,2);
-            JFinvT(2,0) = F(1,0)*F(2,1) - F(2,0)*F(1,1);
-            JFinvT(0,1) = F(2,1)*F(0,2) - F(0,1)*F(2,2);
-            JFinvT(1,1) = F(0,0)*F(2,2) - F(2,0)*F(0,2);
-            JFinvT(2,1) = F(2,0)*F(0,1) - F(0,0)*F(2,1);
-            JFinvT(0,2) = F(0,1)*F(1,2) - F(1,1)*F(0,2);
-            JFinvT(1,2) = F(1,0)*F(0,2) - F(0,0)*F(1,2);
-            JFinvT(2,2) = F(0,0)*F(1,1) - F(1,0)*F(0,1);
+            JFinvT(0,0) = F(1,1)*F(2,2) - F(1,2)*F(2,1);
+            JFinvT(0,1) = F(2,0)*F(2,1) - F(0,1)*F(2,2);
+            JFinvT(0,2) = F(0,1)*F(1,2) - F(0,2)*F(1,1);
+            JFinvT(1,0) = F(1,2)*F(2,0) - F(1,0)*F(2,2);
+            JFinvT(1,1) = F(0,0)*F(2,2) - F(0,2)*F(2,0);
+            JFinvT(1,2) = F(0,2)*F(1,0) - F(0,0)*F(1,2);
+            JFinvT(2,0) = F(1,0)*F(2,1) - F(1,1)*F(2,0);
+            JFinvT(2,1) = F(0,1)*F(2,0) - F(0,0)*F(2,1);
+            JFinvT(2,2) = F(0,0)*F(1,1) - F(0,1)*F(1,0);
             break;
         default: std::cout << "error: dimension must be 2 or 3" << std::endl;
     }
