@@ -12,7 +12,7 @@
 template<class T, int dim>
 double TetraMesh<T,dim>::k = 10000.0;
 template<class T, int dim>
-double TetraMesh<T,dim>::nu = 0.3;
+double TetraMesh<T,dim>::nu = 0.2;
 
 constexpr float cTimeStep = 0.001f;
 
@@ -71,10 +71,12 @@ template<class T, int dim>
 void FEMSolver<T,dim>::cookMyJello() {
 
     // Create a ground plane
-    SquarePlane<T, dim> ground = SquarePlane<T, dim>();
+    //SquarePlane<T, dim> ground = SquarePlane<T, dim>();
 
     // calculate deformation constants
     calculateMaterialConstants();
+    std::cout << mu << std::endl;
+    std::cout << lambda << std::endl;
     // precompute tetrahedron constant values
     precomputeTetraConstants();
     // distribute mass to tetrahedra particles
@@ -94,6 +96,16 @@ void FEMSolver<T,dim>::cookMyJello() {
     Eigen::Matrix<T,dim,1> force = Eigen::Matrix<T,dim,1>::Zero(dim);
     // det(F) * (F^-1)^T term
     Eigen::Matrix<T,dim,dim> JFinvT = Eigen::Matrix<T,dim,dim>::Zero(dim,dim);
+    // identity matrix
+    //Eigen::Matrix<T,dim,dim> I = Eigen::Matrix<T,dim,dim>::Identity();
+
+    int size = mTetraMesh->mParticles.positions.size();
+    //std::vector<Eigen::Matrix<T, dim, 1>> past_pos(mTetraMesh->mParticles.positions);
+    //Eigen::Matrix<T, dim, 1> temp_pos = Eigen::Matrix<T,dim,1>::Zero(dim);
+
+    for(int i = 0; i < size; ++i){
+        mTetraMesh->mParticles.positions[i] *= 0.75;
+    }
 
     // <<<<< Time Loop BEGIN
     for(int i = 0; i < mSteps; ++i) {
@@ -106,11 +118,10 @@ void FEMSolver<T,dim>::cookMyJello() {
             computeR(R, F);
             computeJFinvT(JFinvT, F);
             P = mu * (F - R) + lambda * (F.determinant() - 1) * JFinvT;
+            //P = mu * (F - R) + lambda * (R.transpose() * F - I).trace() * R;
             //std::cout << P << std::endl;
             G = P * t.mVolDmInvT;
-            // if(i == 600){
-            //     std::cout << P << std::endl;
-            // }
+
             for(int j = 1; j < dim + 1; ++j){
                 mTetraMesh->mParticles.forces[t.mPIndices[j]] += G.col(j - 1);
                 force += G.col(j - 1);
@@ -121,11 +132,9 @@ void FEMSolver<T,dim>::cookMyJello() {
 
         // <<<<< Integration BEGIN
 
-        int size = mTetraMesh->mParticles.positions.size();
-        std::vector<Eigen::Matrix<T, dim, 1>> past_pos(mTetraMesh->mParticles.positions);
-        Eigen::Matrix<T, dim, 1> temp_pos;
-
         for(int j = 0; j < size; ++j) {
+
+            //temp_pos = Eigen::Matrix<T,dim,1>::Zero(dim);
 
             State<T, dim> currState;
             State<T, dim> newState;
@@ -133,16 +142,18 @@ void FEMSolver<T,dim>::cookMyJello() {
             currState.mComponents[POS] = mTetraMesh->mParticles.positions[j];
             currState.mComponents[VEL] = mTetraMesh->mParticles.velocities[j];
             currState.mMass = mTetraMesh->mParticles.masses[j];
-            currState.mComponents[FOR] = mTetraMesh->mParticles.forces[j] / currState.mMass + Eigen::Matrix<T,dim,1>(0, -9.8f, 0);
+            //currState.mComponents[FOR] = mTetraMesh->mParticles.forces[j] / currState.mMass + Eigen::Matrix<T,dim,1>(0, -9.8f, 0);
+            currState.mComponents[FOR] = mTetraMesh->mParticles.forces[j] / currState.mMass;
 
             mIntegrator.integrate(cTimeStep, 0, currState, newState);
 
-            if(ground.checkCollisions(newState.mComponents[POS], temp_pos)){
-                if(newState.mComponents[VEL][1] < 0){
-                    newState.mComponents[VEL][1] = 0;
-                }
-                newState.mComponents[POS] = currState.mComponents[POS];
-            }
+            // if(ground.checkCollisions(newState.mComponents[POS], temp_pos)){
+            //     if(newState.mComponents[VEL][1] < 0){
+            //         newState.mComponents[VEL][1] = 0;
+            //     }
+            //     //newState.mComponents[POS] = currState.mComponents[POS];
+            //     newState.mComponents[POS] = temp_pos;
+            // }
             mTetraMesh->mParticles.positions[j] = newState.mComponents[POS];
             mTetraMesh->mParticles.velocities[j] = newState.mComponents[VEL];
 
