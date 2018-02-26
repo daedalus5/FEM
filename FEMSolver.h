@@ -64,7 +64,8 @@ void FEMSolver<T,dim>::initializeMesh() {
 
     // Initialize mTetraMesh here
     mTetraMesh = new TetraMesh<T,dim>("objects/cube.1");
-    mTetraMesh->generateTetras();
+    //mTetraMesh->generateTetras();
+	mTetraMesh->generateSimpleTetrahedron();
 }
 
 template<class T, int dim>

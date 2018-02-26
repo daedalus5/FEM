@@ -24,6 +24,11 @@ public:
 
     void zeroForces();
 	void write_data_bgeo(const std::string& s, int frame);
+
+
+    void addParticle(Eigen::Matrix<T, dim, 1> pos);
+
+
 };
 
 template<class T, int dim>
@@ -39,6 +44,15 @@ void Particles<T,dim>::zeroForces(){
             forces[i][j] = 0;
         }
     }
+}
+
+template<class T, int dim>
+void Particles<T,dim>::addParticle(Eigen::Matrix<T, dim, 1> pos) {
+    positions.push_back(Eigen::Matrix<T,dim,1>(pos));
+    velocities.push_back(Eigen::Matrix<T,dim,1>(0.0,0.0,0.0));
+    masses.push_back(0.0);
+    forces.push_back(Eigen::Matrix<T,dim,1>(0.0,0.0,0.0));
+    drags.push_back(Eigen::Matrix<T,dim,1>(0.0,0.0,0.0));
 }
 
 template<class T, int dim>

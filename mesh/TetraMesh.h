@@ -18,6 +18,7 @@ public:
 
     void generateTetras();      // read data from tetgen and populate particles and tetras
     void outputFrame(int frame);    // write data to frame
+    void generateSimpleTetrahedron();
 
     Particles<T,dim> mParticles;
     std::vector<Tetrahedron<T,dim>> mTetras;
@@ -109,6 +110,56 @@ void TetraMesh<T,dim>::generateTetras(){
 
     outFile << "\nEND";
     outFile.close();
+}
+
+template<class T, int dim>
+void TetraMesh<T,dim>::generateSimpleTetrahedron() {
+
+    this->mParticles.addParticle(Eigen::Matrix<T,dim,1>(1.0, 0.0, 1.0)); // 0
+    this->mParticles.addParticle(Eigen::Matrix<T,dim,1>(-1.0, 0.0, 1.0)); // 1
+    this->mParticles.addParticle(Eigen::Matrix<T,dim,1>(-1.0, 0.0, -1.0)); // 2
+    this->mParticles.addParticle(Eigen::Matrix<T,dim,1>(1.0, 0.0, -1.0)); // 3
+
+    this->mParticles.addParticle(Eigen::Matrix<T,dim,1>(1.0, 1.0, 1.0)); // 4
+    this->mParticles.addParticle(Eigen::Matrix<T,dim,1>(-1.0, 1.0, 1.0)); // 5
+    this->mParticles.addParticle(Eigen::Matrix<T,dim,1>(-1.0, 1.0, -1.0)); // 6
+    this->mParticles.addParticle(Eigen::Matrix<T,dim,1>(1.0, 1.0, -1.0)); // 7
+
+    std::vector<int> indices;
+
+    indices.push_back(4);
+    indices.push_back(1);
+    indices.push_back(6);
+    indices.push_back(3);
+    this->mTetras.push_back(Tetrahedron<T, dim>(indices));
+
+    indices.clear();
+    indices.push_back(0);
+    indices.push_back(1);
+    indices.push_back(4);
+    indices.push_back(3);
+    this->mTetras.push_back(Tetrahedron<T, dim>(indices));
+
+    indices.clear();
+    indices.push_back(7);
+    indices.push_back(4);
+    indices.push_back(6);
+    indices.push_back(3);
+    this->mTetras.push_back(Tetrahedron<T, dim>(indices));
+
+    indices.clear();
+    indices.push_back(2);
+    indices.push_back(1);
+    indices.push_back(3);
+    indices.push_back(6);
+    this->mTetras.push_back(Tetrahedron<T, dim>(indices));
+
+    indices.clear();
+    indices.push_back(5);
+    indices.push_back(6);
+    indices.push_back(4);
+    indices.push_back(1);
+    this->mTetras.push_back(Tetrahedron<T, dim>(indices));
 }
 
 template<class T, int dim>
