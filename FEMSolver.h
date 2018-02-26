@@ -10,11 +10,11 @@
 
 // values are for rubber;
 template<class T, int dim>
-double TetraMesh<T,dim>::k = 1000.0;
+double TetraMesh<T,dim>::k = 1200.0;
 template<class T, int dim>
 double TetraMesh<T,dim>::nu = 0.2;
 
-constexpr float cTimeStep = 0.001f;
+constexpr float cTimeStep = 1/(24.f*40.f); //0.001f;
 
 // 24 frames per second
 // mesh resolution
@@ -64,8 +64,8 @@ void FEMSolver<T,dim>::initializeMesh() {
 
     // Initialize mTetraMesh here
     mTetraMesh = new TetraMesh<T,dim>("objects/cube.1");
-    //mTetraMesh->generateTetras();
-	mTetraMesh->generateSimpleTetrahedron();
+    mTetraMesh->generateTetras();
+    //mTetraMesh->generateSimpleTetrahedron();
 }
 
 template<class T, int dim>
@@ -108,8 +108,13 @@ void FEMSolver<T,dim>::cookMyJello() {
     //     mTetraMesh->mParticles.positions[i] *= 0.75;
     // }
 
+    int numSteps = (mSteps / 24) / (cTimeStep);
+
     // <<<<< Time Loop BEGIN
-    for(int i = 0; i < mSteps; ++i) {
+    int currFrame = 0;
+
+    for(int i = 0; i < numSteps; ++i)
+    {
         mTetraMesh->mParticles.zeroForces();
         // <<<<< force update BEGIN
         for(Tetrahedron<T,dim> &t : mTetraMesh->mTetras){
@@ -132,9 +137,7 @@ void FEMSolver<T,dim>::cookMyJello() {
             mTetraMesh->mParticles.forces[t.mPIndices[0]] += -force;
         }
         // <<<<< force update END
-
         // <<<<< Integration BEGIN
-
         for(int j = 0; j < size; ++j) {
 
             temp_pos = Eigen::Matrix<T,dim,1>::Zero(dim);
@@ -176,7 +179,12 @@ void FEMSolver<T,dim>::cookMyJello() {
         //     }
         // }
 
-        mTetraMesh->outputFrame(i);
+       if(i % 40 == 0  || i == 0)
+       {
+         mTetraMesh->outputFrame(currFrame);
+         currFrame++;
+       }
+
     }
     // <<<<< Time Loop END
 }
