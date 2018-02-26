@@ -10,7 +10,7 @@
 
 // values are for rubber;
 template<class T, int dim>
-double TetraMesh<T,dim>::k = 10000.0;
+double TetraMesh<T,dim>::k = 100.0;
 template<class T, int dim>
 double TetraMesh<T,dim>::nu = 0.2;
 
@@ -221,10 +221,10 @@ void FEMSolver<T,dim>::computeR(Eigen::Matrix<T,dim,dim>& R,
     Eigen::Matrix<T,dim,dim> U = svd.matrixU();
     Eigen::Matrix<T,dim,dim> V = svd.matrixV(); // make sure this does need to be transposed
 
-    if(U.determinant() < 0){
+    if(U.determinant() < -1E-5){
         U.col(dim - 1) = -1 * U.col(dim - 1);
     }
-    if(V.determinant() < 0){
+    if(V.determinant() < -1E-5){
         V.col(dim - 1) = -1 * V.col(dim - 1);
     }
 
