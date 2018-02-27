@@ -64,8 +64,8 @@ void FEMSolver<T,dim>::initializeMesh() {
 
     // Initialize mTetraMesh here
     mTetraMesh = new TetraMesh<T,dim>("objects/cube.1");
-    //mTetraMesh->generateTetras();
-	mTetraMesh->generateSimpleTetrahedron();
+    mTetraMesh->generateTetras();
+	//mTetraMesh->generateSimpleTetrahedron();
 }
 
 template<class T, int dim>
@@ -104,6 +104,8 @@ void FEMSolver<T,dim>::cookMyJello() {
     //std::vector<Eigen::Matrix<T, dim, 1>> past_pos(mTetraMesh->mParticles.positions);
     Eigen::Matrix<T, dim, 1> temp_pos = Eigen::Matrix<T,dim,1>::Zero(dim);
 
+
+    std::cout << "size " << size << std::endl;
     // for(int i = 0; i < size; ++i){
     //     mTetraMesh->mParticles.positions[i] *= 0.75;
     // }

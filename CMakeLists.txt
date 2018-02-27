@@ -24,6 +24,7 @@ add_cispba_executable(FEM main.cpp
         utility/FileHelper.h
         scene/shape.h
         scene/squareplane.h
+        scene/sphere.h
         globalincludes.h)
         
 target_include_directories(FEM SYSTEM PUBLIC ${EIGEN3_INCLUDE_DIR})
