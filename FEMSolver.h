@@ -10,11 +10,11 @@
 
 // values are for rubber;
 template<class T, int dim>
-double TetraMesh<T,dim>::k = 1200.0;
+double TetraMesh<T,dim>::k = 1500;
 template<class T, int dim>
 double TetraMesh<T,dim>::nu = 0.2;
-
-constexpr float cTimeStep = 1/(24.f*40.f); //0.001f;
+const int divisor = 600;
+constexpr float cTimeStep = 1/(24.f*divisor); //0.001f;
 
 // 24 frames per second
 // mesh resolution
@@ -179,7 +179,7 @@ void FEMSolver<T,dim>::cookMyJello() {
         //     }
         // }
 
-       if(i % 40 == 0  || i == 0)
+       if(i % divisor == 0  || i == 0)
        {
          mTetraMesh->outputFrame(currFrame);
          currFrame++;
@@ -264,7 +264,7 @@ void FEMSolver<T,dim>::computeJFinvT(Eigen::Matrix<T,dim,dim>& JFinvT, const Eig
             break;
         default: std::cout << "error: dimension must be 2 or 3" << std::endl;
     }
-    JFinvT = JFinvT.transpose();
+    JFinvT.transposeInPlace();
 }
 
 template<class T, int dim>
