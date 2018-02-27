@@ -9,7 +9,7 @@ class Scene
 {
     public:
         Scene();
-        ~Scene();
+        virtual ~Scene();
         bool checkCollisions(const Eigen::Matrix<T, dim, 1> pos, Eigen::Matrix<T, dim,1> &out_pos) const;
         
         std::vector<Shape<T, dim>*> shapes;
@@ -19,12 +19,12 @@ template<class T, int dim>
 Scene<T, dim>::Scene() {
 
     // Create a ground plane
-    Shape<T, dim>* ground = new SquarePlane<T, dim>();
-    shapes.push_back(ground);
+    // Shape<T, dim>* ground = new SquarePlane<T, dim>();
+    // shapes.push_back(ground);
 
     // Create sphere
-    Shape<T, dim>* sphere = new Sphere<T, dim>();
-    shapes.push_back(sphere);
+    // Shape<T, dim>* sphere = new Sphere<T, dim>();
+    // shapes.push_back(sphere);
 
 }
 

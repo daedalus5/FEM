@@ -7,7 +7,7 @@
 //#include "scene/squareplane.h"
 //#include "scene/sphere.h"
 #include "scene/scene.h"
-
+#include "scene/plinkoScene.h"
 
 
 // values are for rubber;
@@ -76,7 +76,7 @@ void FEMSolver<T,dim>::cookMyJello() {
     // Create a ground plane
     //SquarePlane<T, dim> ground = SquarePlane<T, dim>();
     //Sphere<T, dim> sphere = Sphere<T, dim>();
-    Scene<T, dim> scene = Scene<T, dim>();
+    PlinkoScene<T, dim> scene = PlinkoScene<T, dim>();
 
     // calculate deformation constants
     calculateMaterialConstants();
@@ -132,9 +132,9 @@ void FEMSolver<T,dim>::cookMyJello() {
             computeJFinvT(JFinvT, F);
             P = mu * (F - R) + lambda * (F.determinant() - 1) * JFinvT;
             //P = mu * (F - R) + lambda * (R.transpose() * F - I).trace() * R;
-            if (currFrame == 400 && i % divisor == 1) {
-                std::cout << P << std::endl;
-            }
+            // if (currFrame == 400 && i % divisor == 1) {
+            //     std::cout << P << std::endl;
+            // }
             G = P * t.mVolDmInvT;
 
             for(int j = 1; j < dim + 1; ++j){
@@ -164,11 +164,11 @@ void FEMSolver<T,dim>::cookMyJello() {
             mIntegrator.integrate(cTimeStep, 0, currState, newState);
 
             if(scene.checkCollisions(newState.mComponents[POS], temp_pos)){
-                //if(newState.mComponents[VEL][1] < 0){
+                // if(newState.mComponents[VEL][1] < 0){
                 //    newState.mComponents[VEL][1] = 0;
-                //newState.mComponents[POS] = currState.mComponents[POS];
-                //}
-                //newState.mComponents[POS] = currState.mComponents[POS];
+                // //newState.mComponents[POS] = currState.mComponents[POS];
+                // }
+                // newState.mComponents[POS] = currState.mComponents[POS];
                 newState.mComponents[POS] = temp_pos;
                 newState.mComponents[VEL] = (temp_pos - currState.mComponents[POS]) / cTimeStep;
             }

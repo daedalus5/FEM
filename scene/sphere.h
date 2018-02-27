@@ -12,7 +12,7 @@ class Sphere : public Shape<T, dim>
         bool checkCollisions(const Eigen::Matrix<T, dim, 1> &pos, Eigen::Matrix<T, dim, 1> &out_pos) const override;
 
     private:
-        float radius = 0.25f;
+        float radius = 1.0f;
 };
 
 

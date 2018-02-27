@@ -26,6 +26,7 @@ add_cispba_executable(FEM main.cpp
         scene/squareplane.h
         scene/sphere.h
         scene/scene.h
+        scene/plinkoScene.h
         globalincludes.h)
         
 target_include_directories(FEM SYSTEM PUBLIC ${EIGEN3_INCLUDE_DIR})
