@@ -10,11 +10,11 @@
 
 // values are for rubber;
 template<class T, int dim>
-double TetraMesh<T,dim>::k = 1000.0;
+double TetraMesh<T,dim>::k = 1500;
 template<class T, int dim>
 double TetraMesh<T,dim>::nu = 0.2;
-
-constexpr float cTimeStep = 0.001f;
+const int divisor = 600;
+constexpr float cTimeStep = 1/(24.f*divisor); //0.001f;
 
 // 24 frames per second
 // mesh resolution
@@ -65,7 +65,7 @@ void FEMSolver<T,dim>::initializeMesh() {
     // Initialize mTetraMesh here
     mTetraMesh = new TetraMesh<T,dim>("objects/cube.1");
     mTetraMesh->generateTetras();
-	//mTetraMesh->generateSimpleTetrahedron();
+    //mTetraMesh->generateSimpleTetrahedron();
 }
 
 template<class T, int dim>
@@ -110,8 +110,13 @@ void FEMSolver<T,dim>::cookMyJello() {
     //     mTetraMesh->mParticles.positions[i] *= 0.75;
     // }
 
+    int numSteps = (mSteps / 24) / (cTimeStep);
+
     // <<<<< Time Loop BEGIN
-    for(int i = 0; i < mSteps; ++i) {
+    int currFrame = 0;
+
+    for(int i = 0; i < numSteps; ++i)
+    {
         mTetraMesh->mParticles.zeroForces();
         // <<<<< force update BEGIN
         for(Tetrahedron<T,dim> &t : mTetraMesh->mTetras){
@@ -134,9 +139,7 @@ void FEMSolver<T,dim>::cookMyJello() {
             mTetraMesh->mParticles.forces[t.mPIndices[0]] += -force;
         }
         // <<<<< force update END
-
         // <<<<< Integration BEGIN
-
         for(int j = 0; j < size; ++j) {
 
             temp_pos = Eigen::Matrix<T,dim,1>::Zero(dim);
@@ -178,7 +181,12 @@ void FEMSolver<T,dim>::cookMyJello() {
         //     }
         // }
 
-        mTetraMesh->outputFrame(i);
+       if(i % divisor == 0  || i == 0)
+       {
+         mTetraMesh->outputFrame(currFrame);
+         currFrame++;
+       }
+
     }
     // <<<<< Time Loop END
 }
@@ -258,7 +266,7 @@ void FEMSolver<T,dim>::computeJFinvT(Eigen::Matrix<T,dim,dim>& JFinvT, const Eig
             break;
         default: std::cout << "error: dimension must be 2 or 3" << std::endl;
     }
-    JFinvT = JFinvT.transpose();
+    JFinvT.transposeInPlace();
 }
 
 template<class T, int dim>
