@@ -132,7 +132,9 @@ void FEMSolver<T,dim>::cookMyJello() {
             computeJFinvT(JFinvT, F);
             P = mu * (F - R) + lambda * (F.determinant() - 1) * JFinvT;
             //P = mu * (F - R) + lambda * (R.transpose() * F - I).trace() * R;
-            //std::cout << P << std::endl;
+            if (currFrame == 400 && i % divisor == 1) {
+                std::cout << P << std::endl;
+            }
             G = P * t.mVolDmInvT;
 
             for(int j = 1; j < dim + 1; ++j){
@@ -238,7 +240,7 @@ void FEMSolver<T,dim>::computeF(Eigen::Matrix<T,dim,dim>& F,
 template<class T, int dim>
 void FEMSolver<T,dim>::computeR(Eigen::Matrix<T,dim,dim>& R,
                     const Eigen::Matrix<T,dim,dim>& F){
-    Eigen::JacobiSVD<Eigen::Matrix<T,dim,dim>> svd(F, Eigen::ComputeThinU | Eigen::ComputeThinV);
+    Eigen::JacobiSVD<Eigen::Matrix<T,dim,dim>> svd(F, Eigen::ComputeFullU | Eigen::ComputeFullV);
     Eigen::Matrix<T,dim,dim> U = svd.matrixU();
     Eigen::Matrix<T,dim,dim> V = svd.matrixV(); // make sure this does need to be transposed
 
@@ -263,7 +265,7 @@ void FEMSolver<T,dim>::computeJFinvT(Eigen::Matrix<T,dim,dim>& JFinvT, const Eig
             break;
         case 3:
             JFinvT(0,0) = F(1,1)*F(2,2) - F(1,2)*F(2,1);
-            JFinvT(0,1) = F(2,0)*F(2,1) - F(0,1)*F(2,2);
+            JFinvT(0,1) = F(0,2)*F(2,1) - F(0,1)*F(2,2);
             JFinvT(0,2) = F(0,1)*F(1,2) - F(0,2)*F(1,1);
             JFinvT(1,0) = F(1,2)*F(2,0) - F(1,0)*F(2,2);
             JFinvT(1,1) = F(0,0)*F(2,2) - F(0,2)*F(2,0);
