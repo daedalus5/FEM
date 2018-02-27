@@ -5,6 +5,7 @@
 #include "mesh/Tetrahedron.h"
 #include "integrator/ForwardEuler.h"
 #include "scene/squareplane.h"
+#include "scene/sphere.h"
 
 
 
@@ -73,6 +74,7 @@ void FEMSolver<T,dim>::cookMyJello() {
 
     // Create a ground plane
     SquarePlane<T, dim> ground = SquarePlane<T, dim>();
+    Sphere<T, dim> sphere = Sphere<T, dim>();
 
     // calculate deformation constants
     calculateMaterialConstants();
@@ -150,12 +152,19 @@ void FEMSolver<T,dim>::cookMyJello() {
             currState.mComponents[POS] = mTetraMesh->mParticles.positions[j];
             currState.mComponents[VEL] = mTetraMesh->mParticles.velocities[j];
             currState.mMass = mTetraMesh->mParticles.masses[j];
-            currState.mComponents[FOR] = mTetraMesh->mParticles.forces[j] / currState.mMass + Eigen::Matrix<T,dim,1>(0, -0.1f, 0);
+            currState.mComponents[FOR] = mTetraMesh->mParticles.forces[j] / currState.mMass + Eigen::Matrix<T,dim,1>(0, -0.8f, 0);
             //currState.mComponents[FOR] = mTetraMesh->mParticles.forces[j] / currState.mMass;
 
             mIntegrator.integrate(cTimeStep, 0, currState, newState);
 
             if(ground.checkCollisions(newState.mComponents[POS], temp_pos)){
+                if(newState.mComponents[VEL][1] < 0){
+                    newState.mComponents[VEL][1] = 0;
+                }
+                //newState.mComponents[POS] = currState.mComponents[POS];
+                newState.mComponents[POS] = temp_pos;
+            }
+            if(sphere.checkCollisions(newState.mComponents[POS], temp_pos)){
                 if(newState.mComponents[VEL][1] < 0){
                     newState.mComponents[VEL][1] = 0;
                 }
