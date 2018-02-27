@@ -88,6 +88,8 @@ void TetraMesh<T,dim>::generateTetras(){
             int numTets = atoi(t);
             int a,b,c,d,e;
             std::vector<int> indices;
+
+
             for(int i = 0; i < numTets; i++)
             {
                     // indices of tetrahedron

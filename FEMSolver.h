@@ -4,14 +4,15 @@
 #include "mesh/TetraMesh.h"
 #include "mesh/Tetrahedron.h"
 #include "integrator/ForwardEuler.h"
-#include "scene/squareplane.h"
-#include "scene/sphere.h"
+//#include "scene/squareplane.h"
+//#include "scene/sphere.h"
+#include "scene/scene.h"
 
 
 
 // values are for rubber;
 template<class T, int dim>
-double TetraMesh<T,dim>::k = 1500;
+double TetraMesh<T,dim>::k = 10000;
 template<class T, int dim>
 double TetraMesh<T,dim>::nu = 0.2;
 const int divisor = 600;
@@ -73,8 +74,9 @@ template<class T, int dim>
 void FEMSolver<T,dim>::cookMyJello() {
 
     // Create a ground plane
-    SquarePlane<T, dim> ground = SquarePlane<T, dim>();
-    Sphere<T, dim> sphere = Sphere<T, dim>();
+    //SquarePlane<T, dim> ground = SquarePlane<T, dim>();
+    //Sphere<T, dim> sphere = Sphere<T, dim>();
+    Scene<T, dim> scene = Scene<T, dim>();
 
     // calculate deformation constants
     calculateMaterialConstants();
@@ -107,7 +109,6 @@ void FEMSolver<T,dim>::cookMyJello() {
     Eigen::Matrix<T, dim, 1> temp_pos = Eigen::Matrix<T,dim,1>::Zero(dim);
 
 
-    std::cout << "size " << size << std::endl;
     // for(int i = 0; i < size; ++i){
     //     mTetraMesh->mParticles.positions[i] *= 0.75;
     // }
@@ -124,6 +125,8 @@ void FEMSolver<T,dim>::cookMyJello() {
         for(Tetrahedron<T,dim> &t : mTetraMesh->mTetras){
             force = Eigen::Matrix<T,dim,1>::Zero(dim);
             computeDs(Ds, t);
+
+
             computeF(F, Ds, t);
             computeR(R, F);
             computeJFinvT(JFinvT, F);
@@ -139,6 +142,7 @@ void FEMSolver<T,dim>::cookMyJello() {
                 }
             }
             mTetraMesh->mParticles.forces[t.mPIndices[0]] += -force;
+
         }
         // <<<<< force update END
         // <<<<< Integration BEGIN
@@ -152,24 +156,19 @@ void FEMSolver<T,dim>::cookMyJello() {
             currState.mComponents[POS] = mTetraMesh->mParticles.positions[j];
             currState.mComponents[VEL] = mTetraMesh->mParticles.velocities[j];
             currState.mMass = mTetraMesh->mParticles.masses[j];
-            currState.mComponents[FOR] = mTetraMesh->mParticles.forces[j] / currState.mMass + Eigen::Matrix<T,dim,1>(0, -0.8f, 0);
+            currState.mComponents[FOR] = mTetraMesh->mParticles.forces[j] / currState.mMass + Eigen::Matrix<T,dim,1>(0, -0.1f, 0);
             //currState.mComponents[FOR] = mTetraMesh->mParticles.forces[j] / currState.mMass;
 
             mIntegrator.integrate(cTimeStep, 0, currState, newState);
 
-            if(ground.checkCollisions(newState.mComponents[POS], temp_pos)){
-                if(newState.mComponents[VEL][1] < 0){
-                    newState.mComponents[VEL][1] = 0;
-                }
+            if(scene.checkCollisions(newState.mComponents[POS], temp_pos)){
+                //if(newState.mComponents[VEL][1] < 0){
+                //    newState.mComponents[VEL][1] = 0;
+                //newState.mComponents[POS] = currState.mComponents[POS];
+                //}
                 //newState.mComponents[POS] = currState.mComponents[POS];
                 newState.mComponents[POS] = temp_pos;
-            }
-            if(sphere.checkCollisions(newState.mComponents[POS], temp_pos)){
-                if(newState.mComponents[VEL][1] < 0){
-                    newState.mComponents[VEL][1] = 0;
-                }
-                //newState.mComponents[POS] = currState.mComponents[POS];
-                newState.mComponents[POS] = temp_pos;
+                newState.mComponents[VEL] = (temp_pos - currState.mComponents[POS]) / cTimeStep;
             }
             mTetraMesh->mParticles.positions[j] = newState.mComponents[POS];
             mTetraMesh->mParticles.velocities[j] = newState.mComponents[VEL];

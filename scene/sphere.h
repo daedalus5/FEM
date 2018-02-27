@@ -9,10 +9,10 @@ class Sphere : public Shape<T, dim>
 {
     public:
         Sphere();
-        virtual bool checkCollisions(Eigen::Matrix<T, dim, 1> &pos, Eigen::Matrix<T, dim, 1> &out_pos) const override;
+        bool checkCollisions(const Eigen::Matrix<T, dim, 1> &pos, Eigen::Matrix<T, dim, 1> &out_pos) const override;
 
     private:
-        float radius = 0.5f;
+        float radius = 0.25f;
 };
 
 
@@ -20,12 +20,12 @@ template<class T, int dim>
 Sphere<T, dim>::Sphere() : Shape<T, dim>() {
     //center[1] = -1.0;
     this->center[0] = 0.3;
-    this->center[1] = -0.75;
+    this->center[1] = -1.0;
     this->center[2] = 0.5;
 }
 
 template<class T, int dim>
-bool Sphere<T, dim>::checkCollisions(Eigen::Matrix<T, dim, 1> &pos, Eigen::Matrix<T, dim, 1> &out_pos) const
+bool Sphere<T, dim>::checkCollisions(const Eigen::Matrix<T, dim, 1> &pos, Eigen::Matrix<T, dim, 1> &out_pos) const
 {
 
     if (dim == 3) {
