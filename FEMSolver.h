@@ -8,6 +8,7 @@
 //#include "scene/sphere.h"
 #include "scene/scene.h"
 #include "scene/plinkoScene.h"
+#include "scene/bulldozeScene.h"
 
 
 // values are for rubber;
@@ -73,10 +74,9 @@ void FEMSolver<T,dim>::initializeMesh() {
 template<class T, int dim>
 void FEMSolver<T,dim>::cookMyJello() {
 
-    // Create a ground plane
-    //SquarePlane<T, dim> ground = SquarePlane<T, dim>();
-    //Sphere<T, dim> sphere = Sphere<T, dim>();
-    PlinkoScene<T, dim> scene = PlinkoScene<T, dim>();
+    // Create scene
+    //PlinkoScene<T, dim> scene = PlinkoScene<T, dim>();
+    BulldozeScene<T, dim> scene = BulldozeScene<T, dim>();
 
     // calculate deformation constants
     calculateMaterialConstants();
@@ -162,6 +162,8 @@ void FEMSolver<T,dim>::cookMyJello() {
             //currState.mComponents[FOR] = mTetraMesh->mParticles.forces[j] / currState.mMass;
 
             mIntegrator.integrate(cTimeStep, 0, currState, newState);
+           
+            scene.updatePosition(cTimeStep);
 
             if(scene.checkCollisions(newState.mComponents[POS], temp_pos)){
                 // if(newState.mComponents[VEL][1] < 0){
@@ -194,6 +196,7 @@ void FEMSolver<T,dim>::cookMyJello() {
        if(i % divisor == 0  || i == 0)
        {
          mTetraMesh->outputFrame(currFrame);
+         scene.outputFrame(currFrame);
          currFrame++;
        }
 

@@ -8,16 +8,17 @@ template<class T, int dim>
 class SquarePlane : public Shape<T, dim>
 {
     public:
-        SquarePlane();
+        SquarePlane() : Shape<T, dim>() {};
+        SquarePlane(std::string file);
         bool checkCollisions(const Eigen::Matrix<T, dim, 1> &pos, Eigen::Matrix<T, dim, 1> &out_pos) const override;
 
     private:
-        float length_half = 50.f;
+        float length_half = 200.f;
 };
 
 
 template<class T, int dim>
-SquarePlane<T, dim>::SquarePlane() : Shape<T, dim>() {
+SquarePlane<T, dim>::SquarePlane(std::string file) : Shape<T, dim>(file) {
     this->center[1] = -1.0;
 }
 
