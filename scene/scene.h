@@ -18,9 +18,9 @@ class Scene
 template<class T, int dim>
 Scene<T, dim>::Scene() {
 
-    // Create a ground plane
-    // Shape<T, dim>* ground = new SquarePlane<T, dim>();
-    // shapes.push_back(ground);
+    //Create a ground plane
+    Shape<T, dim>* ground = new SquarePlane<T, dim>();
+    shapes.push_back(ground);
 
     // Create sphere
     // Shape<T, dim>* sphere = new Sphere<T, dim>();

@@ -18,7 +18,7 @@ class SquarePlane : public Shape<T, dim>
 
 template<class T, int dim>
 SquarePlane<T, dim>::SquarePlane() : Shape<T, dim>() {
-    this->center[1] = -1.0;
+    this->center[1] = 0.0;
 }
 
 template<class T, int dim>
