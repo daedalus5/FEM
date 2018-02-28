@@ -76,13 +76,13 @@ template<class T, int dim>
 void FEMSolver<T,dim>::cookMyJello() {
 
     // Create a basic ground plane
-    //Scene<T, dim> scene = Scene<T, dim>();
+    Scene<T, dim> scene = Scene<T, dim>();
 
     // Create plinko scene
     //PlinkoScene<T, dim> scene = PlinkoScene<T, dim>();
     
     // Create a sphere collision scene
-    BulldozeScene<T, dim> scene = BulldozeScene<T, dim>();
+    //BulldozeScene<T, dim> scene = BulldozeScene<T, dim>();
 
     // calculate deformation constants
     calculateMaterialConstants();
@@ -132,7 +132,7 @@ void FEMSolver<T,dim>::cookMyJello() {
             computeF(F, Ds, t);
             computeR(R, F);
             computeJFinvT(JFinvT, F);
-            P = mu * (F - R) + lambda * (F.determinant() - 1) * JFinvT;
+            P = 2 * mu * (F - R) + lambda * (F.determinant() - 1) * JFinvT;
             G = P * t.mVolDmInvT;
 
             for(int j = 1; j < dim + 1; ++j){

@@ -43,6 +43,15 @@ void TetraMesh<T,dim>::generateTetras(){
     }
     outFile << "POINTS\n\n";
 
+
+    std::ofstream outObject;
+    outObject.open("out.obj");
+    if (!outObject) {
+        std::cout << "Unable to open file out.obj";
+        exit(1);
+    }
+    outObject << "default\n\n";
+
     // .NODE FILE
     // 	list of vertices
             instream.open(this->filepath+".node");
@@ -68,7 +77,8 @@ void TetraMesh<T,dim>::generateTetras(){
                     this->mParticles.forces.push_back(Eigen::Matrix<T,dim,1>(0.0,0.0,0.0));
                     this->mParticles.drags.push_back(Eigen::Matrix<T,dim,1>(0.0,0.0,0.0));
 
-                    outFile << x1 << ": " << x2 << " " << x3 << " " << x4 << "\n";
+                    outFile << x1 << ": " << x2 << " " << x3 << " " << x4 << "\n";  // .poly
+                    outObject << "v " << x2 << " " << x3 << " " << x4 << std::endl; // .obj
             }
             instream.close();
 
@@ -110,8 +120,32 @@ void TetraMesh<T,dim>::generateTetras(){
             }
             instream.close();
 
+
+// .FACE file
+     // list of faces
+            instream.open(this->filepath+".face");
+            if (instream.fail())
+            {
+                   std::cout << "ERROR face" << std::endl;
+                   exit(1);
+            }
+
+            getline(instream, line);
+            const char *f = &line[0];
+            numVerts = atoi(f);
+
+            for(int i = 0; i < numVerts; i++)
+            {
+                    instream >> a >> b >> c >> d >> e;
+
+                    // output faces
+                    outObject << "f " << b << " " << " " << c <<  " " << " " << d << std::endl;
+            }
+            instream.close();
+
     outFile << "\nEND";
     outFile.close();
+    outObject.close();
 }
 
 template<class T, int dim>

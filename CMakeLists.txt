@@ -31,5 +31,5 @@ add_cispba_executable(FEM main.cpp
         globalincludes.h)
         
 target_include_directories(FEM SYSTEM PUBLIC ${EIGEN3_INCLUDE_DIR})
-
+set(CMAKE_CXX_FLAGS "-O3")
 target_link_libraries(FEM partio)
