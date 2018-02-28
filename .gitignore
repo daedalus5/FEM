@@ -44,6 +44,7 @@ compile_commands.json
 CTestTestfile.cmake
 cmake-build-debug/*
 output/*
+bulldoze_output/*
 
 .DS_Store
 

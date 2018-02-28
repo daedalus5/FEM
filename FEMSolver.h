@@ -9,6 +9,7 @@
 #include "scene/scene.h"
 #include "scene/plinkoScene.h"
 #include "scene/constrainedTop.h"
+#include "scene/bulldozeScene.h"
 
 
 // values are for rubber;
@@ -74,8 +75,14 @@ void FEMSolver<T,dim>::initializeMesh() {
 template<class T, int dim>
 void FEMSolver<T,dim>::cookMyJello() {
 
-    // Create a ground plane
-    Scene<T, dim> scene = Scene<T, dim>();
+    // Create a basic ground plane
+    //Scene<T, dim> scene = Scene<T, dim>();
+
+    // Create plinko scene
+    //PlinkoScene<T, dim> scene = PlinkoScene<T, dim>();
+    
+    // Create a sphere collision scene
+    BulldozeScene<T, dim> scene = BulldozeScene<T, dim>();
 
     // calculate deformation constants
     calculateMaterialConstants();
@@ -153,6 +160,8 @@ void FEMSolver<T,dim>::cookMyJello() {
             //currState.mComponents[FOR] = mTetraMesh->mParticles.forces[j] / currState.mMass;
 
             mIntegrator.integrate(cTimeStep, 0, currState, newState);
+           
+            scene.updatePosition(cTimeStep);
 
             // <<<<<< FOR SCENE COLLISIONS
             if(scene.checkCollisions(newState.mComponents[POS], temp_pos)){
@@ -166,9 +175,10 @@ void FEMSolver<T,dim>::cookMyJello() {
             //     newState.mComponents[VEL] = currState.mComponents[VEL];
             // }
 
-            // <<<<< FOR PULLING A CORNER
             mTetraMesh->mParticles.positions[j] = newState.mComponents[POS];
             mTetraMesh->mParticles.velocities[j] = newState.mComponents[VEL];
+
+            // <<<<< FOR PULLING A CORNER
             // if(i == 1800 && j == 6){
             //     mTetraMesh->mParticles.positions[j] += Eigen::Matrix<T,dim,1>(0.2, 0.2, 0.2);
             // }
@@ -188,6 +198,7 @@ void FEMSolver<T,dim>::cookMyJello() {
        if(i % divisor == 0  || i == 0)
        {
          mTetraMesh->outputFrame(currFrame);
+         scene.outputFrame(currFrame);
          currFrame++;
        }
     }

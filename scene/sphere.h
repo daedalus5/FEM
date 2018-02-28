@@ -8,7 +8,8 @@ template<class T, int dim>
 class Sphere : public Shape<T, dim>
 {
     public:
-        Sphere();
+        Sphere() : Shape<T, dim>() {};
+        Sphere(std::string file);
         bool checkCollisions(const Eigen::Matrix<T, dim, 1> &pos, Eigen::Matrix<T, dim, 1> &out_pos) const override;
 
     private:
@@ -17,7 +18,7 @@ class Sphere : public Shape<T, dim>
 
 
 template<class T, int dim>
-Sphere<T, dim>::Sphere() : Shape<T, dim>() {
+Sphere<T, dim>::Sphere(std::string file) : Shape<T, dim>(file) {
     //center[1] = -1.0;
     this->center[0] = 0.3;
     this->center[1] = -1.0;
