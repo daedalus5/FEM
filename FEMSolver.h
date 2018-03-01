@@ -10,7 +10,10 @@
 #include "scene/plinkoScene.h"
 #include "scene/constrainedTop.h"
 #include "scene/bulldozeScene.h"
+#include "integrator/BackwardEuler.h"
 
+z#define USE_EXPLICIT
+#define USE_IMPLICIT
 
 // values are for rubber;
 template<class T, int dim>
@@ -27,12 +30,13 @@ constexpr float cTimeStep = 1/(24.f*divisor); //0.001f;
 template<class T, int dim>
 class FEMSolver {
 private:
-    //ForwardEuler mIntegrator;
+
     TetraMesh<T,dim> *mTetraMesh;
     int mSteps;
     double mu;
     double lambda;
-    ForwardEuler mIntegrator;
+    ForwardEuler mExplicitIntegrator;
+    BackwardEuler mImplicitIntegrator;
 
     void calculateMaterialConstants();    // calculates mu and lambda values for material
     void precomputeTetraConstants();      // precompute tetrahedron constant values
@@ -56,7 +60,7 @@ public:
 };
 
 template<class T, int dim>
-FEMSolver<T,dim>::FEMSolver(int steps) : mTetraMesh(nullptr), mSteps(steps), mu(0.0), lambda(0.0), mIntegrator("explicit") {}
+FEMSolver<T,dim>::FEMSolver(int steps) : mTetraMesh(nullptr), mSteps(steps), mu(0.0), lambda(0.0), mExplicitIntegrator("explicit"), mImplicitIntegrator("implicit") {}
 
 template<class T, int dim>
 FEMSolver<T,dim>::~FEMSolver(){
@@ -159,7 +163,14 @@ void FEMSolver<T,dim>::cookMyJello() {
             currState.mComponents[FOR] = mTetraMesh->mParticles.forces[j] / currState.mMass + Eigen::Matrix<T,dim,1>(0, -1.0f, 0);
             //currState.mComponents[FOR] = mTetraMesh->mParticles.forces[j] / currState.mMass;
 
-            mIntegrator.integrate(cTimeStep, 0, currState, newState);
+
+#ifdef USE_EXPLICIT
+            mExplicitIntegrator.integrate(cTimeStep, 0, currState, newState);
+#endif
+
+#ifdef USE_IMPLICIT
+            mImplicitIntegrator.integrate(cTimeStep, 0, currState, newState);
+#endif
            
             scene.updatePosition(cTimeStep);
 
