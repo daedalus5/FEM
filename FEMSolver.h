@@ -7,6 +7,7 @@
 //#include "scene/squareplane.h"
 //#include "scene/sphere.h"
 #include "scene/scene.h"
+#include "scene/defaultScene.h"
 #include "scene/plinkoScene.h"
 #include "scene/constrainedTop.h"
 #include "scene/bulldozeScene.h"
@@ -22,6 +23,7 @@ template<class T, int dim>
 double TetraMesh<T,dim>::nu = 0.2;
 const int divisor = 600;
 constexpr float cTimeStep = 1/(24.f*divisor); //0.001f;
+const float gravity = 1.0f;
 
 // 24 frames per second
 // mesh resolution
@@ -80,13 +82,13 @@ template<class T, int dim>
 void FEMSolver<T,dim>::cookMyJello() {
 
     // Create a basic ground plane
-    Scene<T, dim> scene = Scene<T, dim>();
+    //DefaultScene<T, dim> scene = DefaultScene<T, dim>();
 
     // Create plinko scene
     //PlinkoScene<T, dim> scene = PlinkoScene<T, dim>();
     
     // Create a sphere collision scene
-    //BulldozeScene<T, dim> scene = BulldozeScene<T, dim>();
+    BulldozeScene<T, dim> scene = BulldozeScene<T, dim>();
 
     // calculate deformation constants
     calculateMaterialConstants();
@@ -160,7 +162,7 @@ void FEMSolver<T,dim>::cookMyJello() {
             currState.mComponents[POS] = mTetraMesh->mParticles.positions[j];
             currState.mComponents[VEL] = mTetraMesh->mParticles.velocities[j];
             currState.mMass = mTetraMesh->mParticles.masses[j];
-            currState.mComponents[FOR] = mTetraMesh->mParticles.forces[j] / currState.mMass + Eigen::Matrix<T,dim,1>(0, -1.0f, 0);
+            currState.mComponents[FOR] = mTetraMesh->mParticles.forces[j] / currState.mMass + Eigen::Matrix<T,dim,1>(0, -gravity, 0);
             //currState.mComponents[FOR] = mTetraMesh->mParticles.forces[j] / currState.mMass;
 
 

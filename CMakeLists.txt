@@ -28,7 +28,9 @@ add_cispba_executable(FEM main.cpp
         scene/squareplane.h
         scene/sphere.h
         scene/scene.h
+        scene/defaultScene.h
         scene/plinkoScene.h
+        scene/bulldozeScene.h
         scene/constrainedTop.h
         globalincludes.h)
         
