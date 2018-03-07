@@ -12,6 +12,8 @@ add_cispba_executable(FEM main.cpp
         FEMSolver.h
         integrator/ForwardEuler.h
         integrator/ForwardEuler.cpp
+	integrator/BackwardEuler.h
+        integrator/BackwardEuler.cpp
         integrator/BaseIntegrator.h
         integrator/BaseIntegrator.cpp
         components/Spring.h

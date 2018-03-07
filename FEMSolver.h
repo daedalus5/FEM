@@ -12,8 +12,8 @@
 #include "scene/bulldozeScene.h"
 #include "integrator/BackwardEuler.h"
 
-z#define USE_EXPLICIT
-#define USE_IMPLICIT
+#define USE_EXPLICIT
+//#define USE_IMPLICIT
 
 // values are for rubber;
 template<class T, int dim>
