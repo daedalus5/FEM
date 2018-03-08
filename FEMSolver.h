@@ -13,8 +13,14 @@
 #include "scene/bulldozeScene.h"
 #include "integrator/BackwardEuler.h"
 
+
 #define USE_EXPLICIT
-//#define USE_IMPLICIT
+#define USE_IMPLICIT
+//#define WORK_IN_PROGRESS
+#ifdef WORK_IN_PROGRESS
+#include "utility/MINRES.h"
+#endif
+
 
 // values are for rubber;
 template<class T, int dim>
@@ -152,6 +158,11 @@ void FEMSolver<T,dim>::cookMyJello() {
         }
         // <<<<< force update END
         // <<<<< Integration BEGIN
+
+
+
+#ifdef USE_EXPLICIT
+
         for(int j = 0; j < size; ++j) {
 
             temp_pos = Eigen::Matrix<T,dim,1>::Zero(dim);
@@ -165,15 +176,8 @@ void FEMSolver<T,dim>::cookMyJello() {
             currState.mComponents[FOR] = mTetraMesh->mParticles.forces[j] / currState.mMass + Eigen::Matrix<T,dim,1>(0, -gravity, 0);
             //currState.mComponents[FOR] = mTetraMesh->mParticles.forces[j] / currState.mMass;
 
-
-#ifdef USE_EXPLICIT
             mExplicitIntegrator.integrate(cTimeStep, 0, currState, newState);
-#endif
 
-#ifdef USE_IMPLICIT
-            mImplicitIntegrator.integrate(cTimeStep, 0, currState, newState);
-#endif
-           
             scene.updatePosition(cTimeStep);
 
             // <<<<<< FOR SCENE COLLISIONS
@@ -206,6 +210,105 @@ void FEMSolver<T,dim>::cookMyJello() {
             // }
         }
 
+#endif
+
+#ifdef USE_IMPLICIT
+
+        // TODO : Implicit Integrator Here
+
+        const int n = size;
+        const int dimen = dim * n;
+
+        // 1. Calculate A Matrix Here
+        float a1 = mTetraMesh->mParticles.masses[0] / (cTimeStep * cTimeStep);
+
+        Eigen::MatrixXf A1Mat(dimen, 1);
+        A1Mat.setConstant(a1);
+
+        Eigen::MatrixXf AMatrix = A1Mat.asDiagonal();
+
+        // 2. Calculate K Matrix here
+
+        Eigen::MatrixXf KMatrix(dimen, dimen);
+
+        KMatrix.setZero();
+
+        // <<< Zach to Update Here >>>
+
+        std::cout << "Break 1" << std::endl;
+
+        // 3. Do A = A + K
+
+        AMatrix += KMatrix;
+
+        std::cout << "Break 2" << std::endl;
+
+        // 4. Calculate B Matrix
+
+        float b1 = mTetraMesh->mParticles.masses[0] / (cTimeStep);
+        Eigen::MatrixXf B1Mat(dimen, 1);
+
+        for(int i = 0; i < size; ++i) {
+
+            // Doing Calculations as:
+            // B = Vn * mass/(dt) + f + mg
+
+            for(int k = 0; k < dim; ++k) {
+                B1Mat(dim * i + k, 0) = mTetraMesh->mParticles.velocities[i](k) * b1 + mTetraMesh->mParticles.forces[i](k) + k == 1? mTetraMesh->mParticles.masses[i] * -gravity : 0;
+            }
+        }
+
+        std::cout << "Break 3" << std::endl;
+
+        // 5. Solve Ax = B
+
+        Eigen::MatrixXf dxMat(dimen, 1);
+        dxMat.setZero();
+
+#ifdef WORK_IN_PROGRESS
+
+        Eigen::MINRES<Eigen::MatrixXf> mr;
+
+        mr.compute(AMatrix);
+        dxMat = mr.solve(B1Mat);
+
+#endif
+
+        std::cout << "Break 4" << std::endl;
+
+
+
+        // 6. Update velocities and position with dx
+
+        Eigen::Matrix<T, dim, 1> newPos;
+        Eigen::Matrix<T, dim, 1> newVel;
+
+        // Adding collision tests here
+        for(int i = 0; i < size; ++i) {
+
+            for(int k = 0; k < dim; ++k) {
+                newPos(k, 0) = dxMat(i * dim + k, 0);
+            }
+
+            // v(n + 1) = v(n) + dx/dt;
+            newVel = mTetraMesh->mParticles.velocities[i] + newPos /  cTimeStep;
+
+            // x(n + 1) = x(n) + dx;
+            newPos = mTetraMesh->mParticles.positions[i] + newPos;
+
+            if(scene.checkCollisions(newPos, temp_pos)){
+                newPos = temp_pos;
+                newVel = (temp_pos - mTetraMesh->mParticles.positions[i]) / cTimeStep;
+            }
+
+            mTetraMesh->mParticles.positions[i] = newPos;
+            mTetraMesh->mParticles.velocities[i] = newVel;
+
+        }
+
+        std::cout << "Break 5" << std::endl;
+
+#endif
         // <<<<< Integration END
 
        if(i % divisor == 0  || i == 0)

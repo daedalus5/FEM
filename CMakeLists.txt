@@ -24,6 +24,7 @@ add_cispba_executable(FEM main.cpp
         mesh/Tetrahedron.h
         utility/FileHelper.cpp
         utility/FileHelper.h
+	utility/MINRES.h
         scene/shape.h
         scene/squareplane.h
         scene/sphere.h
