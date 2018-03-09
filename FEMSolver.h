@@ -72,6 +72,17 @@ private:
                     const Eigen::Matrix<T,dim,dim>& R,
                     const Eigen::Matrix<T,dim,dim>& S);
     float DFDx(int m, int n, int q, int r, const Tetrahedron<T,dim>& t);
+    // helper functions for DsPsiDsqF
+    float DFDF(int j, int k, int m, int n);
+    float DRDF(int j, int k, int m, int n,
+                const Eigen::Matrix<T,dim,dim>& R,
+                const Eigen::Matrix<T,dim,dim>& S);
+    float DHDF(int j, int k, int m, int n,
+                const Eigen::Matrix<T,dim,dim>& F);
+    void computeAinv(Eigen::Matrix<T,dim,dim>& A,
+                const Eigen::Matrix<T,dim,dim>& S);
+    float leviCevita(int i, int j, int k);
+
 
 public:
     FEMSolver(int steps);
@@ -248,10 +259,7 @@ void FEMSolver<T,dim>::cookMyJello() {
         Eigen::MatrixXf KMatrix(dimen, dimen);
 
         KMatrix.setZero();
-
-
-
-        // <<< Zach to Update Here >>>
+        computeK(KMatrix, F, JFinvT, R, S);
 
         std::cout << "Break 1" << std::endl;
 
@@ -446,7 +454,7 @@ void FEMSolver<T,dim>::computeK(Eigen::MatrixXf& KMatrix,
                 const Eigen::Matrix<T,dim,dim>& S)
 {
     for(Tetrahedron<T,dim> t : mTetraMesh->mTetras){
-        Eigen::Matrix<T,dim,dim> K = Eigen::Matrix<T,dim,dim>::Zero(dim, dim);
+        Eigen::MatrixXf K(4*dim, 4*dim);
         for(int p = 0; p < dim + 1; ++p){
             for(int q = 0; q < dim + 1; ++q){
                 for(int i = 0; i < dim; ++i){
@@ -464,7 +472,16 @@ void FEMSolver<T,dim>::computeK(Eigen::MatrixXf& KMatrix,
                 }
             }
         }
-        // add to global K here
+        //
+        for(int i = 0; i < dim + 1; ++i){
+            for(int j = 0; j < dim + 1; ++j){
+                for(int m = 0; m < dim; ++m){
+                    for(int n = 0; n < dim; ++n){
+                        KMatrix(3 * t.mPIndices[i] + m, 3 * t.mPIndices[j] + n) = K(3*i + m, 3*j + n);
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -475,10 +492,159 @@ float FEMSolver<T,dim>::DsqPsiDsqF(int j, int k, int m, int n,
                     const Eigen::Matrix<T,dim,dim>& R,
                     const Eigen::Matrix<T,dim,dim>& S)
 {
-    return 0.0;
+    return 2 * mu * (DFDF(j, k, m, n) - DRDF(j, k, m, n, R, S)) + lambda * (JFinvT(m, n) * JFinvT(j, k) + (F.determinant() - 1) * DHDF(j, k, m, n, F));
 }
 
 template<class T, int dim>
 float FEMSolver<T,dim>::DFDx(int m, int n, int q, int r, const Tetrahedron<T,dim>& t){
-    return 0.0;
+    float val = 0.0;
+    if(q == 0){
+        for(int l = 0; l < dim; ++l){
+            if(r == m){
+                val += -1 * t.mDmInv(l, n);
+            }
+        }
+    }
+    else if(q == 1 || q == 2 || q == 3){
+        for(int l = 0; l < dim; ++l){
+            if(r == m && q == l){
+                val += t.mDmInv(l, n);
+            }
+        }
+    }
+    return val;
+}
+
+template<class T, int dim>
+float FEMSolver<T,dim>::DFDF(int j, int k, int m, int n)
+{
+    if(j == k && k == n){
+        return 1.0;
+    }
+    else{
+        return 0.0;
+    }
+}
+
+template<class T, int dim>
+float FEMSolver<T,dim>::DRDF(int j, int k, int m, int n,
+            const Eigen::Matrix<T,dim,dim>& R,
+            const Eigen::Matrix<T,dim,dim>& S)
+{
+    Eigen::Matrix<T,dim,dim> Ainv = Eigen::Matrix<T,dim,dim>::Zero(dim,dim);
+    computeAinv(Ainv, S);
+    float val = 0.0;
+    for(int a = 0; a < dim; ++a){
+        for(int b = 0; b < dim; ++b){
+            for(int c = 0; c < dim; ++c){
+                for(int d = 0; d < dim; ++d){
+                    val += R(j,a) * leviCevita(a,b,k) * Ainv(b,c) * leviCevita(d,c,n) * R(m, d);
+                }
+            }
+        }
+    }
+    return val;
+}
+
+template<class T, int dim>
+void FEMSolver<T,dim>::computeAinv(Eigen::Matrix<T,dim,dim>& A,
+            const Eigen::Matrix<T,dim,dim>& S)
+{
+    float val = 0.0;
+    for(int i = 0; i < dim; ++i){
+        for(int j = 0; j < dim; ++j){
+            val = 0.0;
+            for(int a = 0; a < dim; ++a){
+                for(int b = 0; b < dim; ++b){
+                    for(int c = 0; c < dim; ++c){
+                        val += leviCevita(a,i,b) * S(c,b) * leviCevita(a,j,c);
+                    }
+                }
+            }
+            A(i,j) = val;
+        }
+    }
+    A = A.inverse();
+}
+
+template<class T, int dim>
+float FEMSolver<T,dim>::DHDF(int j, int k, int m, int n,
+            const Eigen::Matrix<T,dim,dim>& F)
+{
+    Eigen::Matrix<T,dim,dim> dHdF = Eigen::Matrix<T,dim,dim>::Zero(dim, dim);
+    if(m == 0 & n == 0){
+        dHdF << 0, 0, 0,
+                0, F(2,2), -F(1,2),
+                0, -F(2,1), F(1,1);
+    }
+    else if(m == 0 && n == 1){
+        dHdF << 0, -F(2,2), F(1,2),
+                0, 0, 0,
+                0, F(2,0), -F(1,0);
+    }
+    else if(m == 0 && n == 2){
+        dHdF << 0, F(2,1), -F(1,1),
+                0, -F(2,0), F(1,0),
+                0, 0, 0;
+    }
+    else if(m == 1 && n == 0){
+        dHdF << 0, 0, 0,
+                -F(2,2), 0, F(0,2),
+                F(2,1), 0, -F(0,1);
+    }
+    else if(m == 1 && n == 1){
+        dHdF << F(2,2), 0, -F(0,2),
+                0, 0, 0,
+                -F(2,0), 0, F(0,0);
+    }
+    else if(m == 1 && n == 2){
+        dHdF << -F(2,1), 0, F(0,1),
+                F(2,0), 0, -F(0,0),
+                0, 0, 0;
+    }
+    else if(m == 2 && n == 0){
+        dHdF << 0, 0, 0,
+                F(1,2), -F(0,2), 0,
+                -F(1,1), F(0,1), 0;
+    }
+    else if(m == 2 && n == 1){
+        dHdF << -F(1,2), F(0,2), 0,
+                0, 0, 0,
+                F(1,0), -F(0,0), 0;
+    }
+    else if(m == 2 && n == 2){
+        dHdF << F(1,1), -F(0,1), 0,
+                -F(1,0), F(0,0), 0,
+                0, 0, 0;
+    }
+    else{
+        std::cout << "error in dHdF" << std::endl;
+    }
+    return dHdF(j, k);
+}
+template<class T, int dim>
+float FEMSolver<T,dim>::leviCevita(int i, int j, int k){
+    // even cases
+    if(i == 0 && j == 1 && k == 2){
+        return 1.0;
+    }
+    else if(i == 2 && j == 0 && k == 1){
+        return 1.0;
+    }
+    else if(i == 1 && j == 2 && k == 0){
+        return 1.0;
+    }
+    // odd cases
+    else if(i == 0 && j == 2 && k == 1){
+        return -1.0;
+    }
+    else if(i == 2 && j == 1 && k == 0){
+        return -1.0;
+    }
+    else if(i == 1 && j == 0 && k == 2){
+        return -1.0;
+    }
+    else{
+        return 0.0;
+    }
 }
