@@ -12,9 +12,10 @@
 #include "scene/constrainedTop.h"
 #include "scene/bulldozeScene.h"
 #include "integrator/BackwardEuler.h"
+#include <Eigen/IterativeLinearSolvers>
+#include <unsupported/Eigen/IterativeSolvers>
 
-
-#define USE_EXPLICIT
+//#define USE_EXPLICIT
 #define USE_IMPLICIT
 //#define WORK_IN_PROGRESS
 #ifdef WORK_IN_PROGRESS
@@ -261,13 +262,13 @@ void FEMSolver<T,dim>::cookMyJello() {
         KMatrix.setZero();
         computeK(KMatrix, F, JFinvT, R, S);
 
-        std::cout << "Break 1" << std::endl;
+        //std::cout << "Break 1" << std::endl;
 
         // 3. Do A = A + K
 
         AMatrix += KMatrix;
 
-        std::cout << "Break 2" << std::endl;
+        //std::cout << "Break 2" << std::endl;
 
         // 4. Calculate B Matrix
 
@@ -284,7 +285,7 @@ void FEMSolver<T,dim>::cookMyJello() {
             }
         }
 
-        std::cout << "Break 3" << std::endl;
+        //std::cout << "Break 3" << std::endl;
 
         // 5. Solve Ax = B
 
@@ -300,7 +301,11 @@ void FEMSolver<T,dim>::cookMyJello() {
 
 #endif
 
-        std::cout << "Break 4" << std::endl;
+	Eigen::MINRES<Eigen::MatrixXf, Eigen::Lower|Eigen::Upper, Eigen::IdentityPreconditioner> minres;
+    	minres.compute(AMatrix);
+    	dxMat = minres.solve(B1Mat);
+
+        //std::cout << "Break 4" << std::endl;
 
 
 
@@ -332,7 +337,7 @@ void FEMSolver<T,dim>::cookMyJello() {
 
         }
 
-        std::cout << "Break 5" << std::endl;
+        //std::cout << "Break 5" << std::endl;
 
 #endif
         // <<<<< Integration END
