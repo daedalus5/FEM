@@ -28,7 +28,7 @@ template<class T, int dim>
 double TetraMesh<T,dim>::k = 10000;
 template<class T, int dim>
 double TetraMesh<T,dim>::nu = 0.2;
-const int divisor = 600;
+const int divisor = 1;
 constexpr float cTimeStep = 1/(24.f*divisor); //0.001f;
 const float gravity = 1.0f;
 
@@ -118,7 +118,7 @@ void FEMSolver<T,dim>::cookMyJello() {
 
     // Create plinko scene
     //PlinkoScene<T, dim> scene = PlinkoScene<T, dim>();
-    
+
     // Create a sphere collision scene
     BulldozeScene<T, dim> scene = BulldozeScene<T, dim>();
 
@@ -275,13 +275,13 @@ void FEMSolver<T,dim>::cookMyJello() {
         float b1 = mTetraMesh->mParticles.masses[0] / (cTimeStep);
         Eigen::MatrixXf B1Mat(dimen, 1);
 
-        for(int i = 0; i < size; ++i) {
+        for(int d = 0; d < size; ++d) {
 
             // Doing Calculations as:
             // B = Vn * mass/(dt) + f + mg
 
             for(int k = 0; k < dim; ++k) {
-                B1Mat(dim * i + k, 0) = mTetraMesh->mParticles.velocities[i](k) * b1 + mTetraMesh->mParticles.forces[i](k) + k == 1? mTetraMesh->mParticles.masses[i] * -gravity : 0;
+                B1Mat(dim * d + k, 0) = mTetraMesh->mParticles.velocities[d](k) * b1 + mTetraMesh->mParticles.forces[d](k) + k == 1? mTetraMesh->mParticles.masses[d] * -gravity : 0;
             }
         }
 
@@ -301,13 +301,11 @@ void FEMSolver<T,dim>::cookMyJello() {
 
 #endif
 
-	Eigen::MINRES<Eigen::MatrixXf, Eigen::Lower|Eigen::Upper, Eigen::IdentityPreconditioner> minres;
+	    Eigen::MINRES<Eigen::MatrixXf, Eigen::Lower|Eigen::Upper, Eigen::IdentityPreconditioner> minres;
     	minres.compute(AMatrix);
     	dxMat = minres.solve(B1Mat);
 
         //std::cout << "Break 4" << std::endl;
-
-
 
         // 6. Update velocities and position with dx
 
@@ -315,25 +313,24 @@ void FEMSolver<T,dim>::cookMyJello() {
         Eigen::Matrix<T, dim, 1> newVel;
 
         // Adding collision tests here
-        for(int i = 0; i < size; ++i) {
+        for(int d = 0; d < size; ++d) {
 
             for(int k = 0; k < dim; ++k) {
-                newPos(k, 0) = dxMat(i * dim + k, 0);
+                newPos(k, 0) = dxMat(d * dim + k, 0);
             }
-
             // v(n + 1) = v(n) + dx/dt;
-            newVel = mTetraMesh->mParticles.velocities[i] + newPos /  cTimeStep;
+            newVel = mTetraMesh->mParticles.velocities[d] + newPos /  cTimeStep;
 
             // x(n + 1) = x(n) + dx;
-            newPos = mTetraMesh->mParticles.positions[i] + newPos;
+            newPos = mTetraMesh->mParticles.positions[d] + newPos;
 
             if(scene.checkCollisions(newPos, temp_pos)){
                 newPos = temp_pos;
-                newVel = (temp_pos - mTetraMesh->mParticles.positions[i]) / cTimeStep;
+                newVel = (temp_pos - mTetraMesh->mParticles.positions[d]) / cTimeStep;
             }
 
-            mTetraMesh->mParticles.positions[i] = newPos;
-            mTetraMesh->mParticles.velocities[i] = newVel;
+            mTetraMesh->mParticles.positions[d] = newPos;
+            mTetraMesh->mParticles.velocities[d] = newVel;
 
         }
 
@@ -569,7 +566,7 @@ void FEMSolver<T,dim>::computeAinv(Eigen::Matrix<T,dim,dim>& A,
             A(i,j) = val;
         }
     }
-    A = A.inverse();
+    A = A.inverse().eval();
 }
 
 template<class T, int dim>
