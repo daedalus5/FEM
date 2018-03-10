@@ -28,7 +28,7 @@ template<class T, int dim>
 double TetraMesh<T,dim>::k = 10000;
 template<class T, int dim>
 double TetraMesh<T,dim>::nu = 0.2;
-const int divisor = 600;
+const int divisor = 1;
 constexpr float cTimeStep = 1/(24.f*divisor); //0.001f;
 const float gravity = 1.0f;
 
@@ -569,7 +569,7 @@ void FEMSolver<T,dim>::computeAinv(Eigen::Matrix<T,dim,dim>& A,
             A(i,j) = val;
         }
     }
-    A = A.inverse();
+    A = A.inverse().eval();
 }
 
 template<class T, int dim>
