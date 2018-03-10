@@ -38,7 +38,9 @@ void Shape<T, dim>::setVelocity(Eigen::Matrix<T, dim, 1> &n_vel) {
 
 template<class T, int dim>
 void Shape<T, dim>::updatePosition(T dt) {
-    center = center + (dt * velocity);
+    //center = center + (dt * velocity);
+    Eigen::Matrix<T, dim, 1> temp = center + (dt * velocity);
+    center = temp;
 }
 
 template<class T, int dim>
