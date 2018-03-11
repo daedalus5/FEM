@@ -29,12 +29,14 @@ template<class T, int dim>
 bool Sphere<T, dim>::checkCollisions(const Eigen::Matrix<T, dim, 1> &pos, Eigen::Matrix<T, dim, 1> &out_pos) const
 {
 
-    if (dim == 3) {
-        if (((pos[0] - this->center[0]) * (pos[0] - this->center[0])) + 
-            ((pos[1] - this->center[1]) * (pos[1] - this->center[1])) + 
-            ((pos[2] - this->center[2]) * (pos[2] - this->center[2])) - 
-            (radius * radius) 
-            < 0) {
+    //if (dim == 3) {
+        Eigen::Matrix<T, dim, 1> dist = pos - this->center;
+        if (dist.norm() < radius) {
+        //if (((pos[0] - this->center[0]) * (pos[0] - this->center[0])) + 
+        //    ((pos[1] - this->center[1]) * (pos[1] - this->center[1])) + 
+        //    ((pos[2] - this->center[2]) * (pos[2] - this->center[2])) - 
+        //    (radius * radius) 
+        //    < 0) {
 
             // Collision in 3D
             Eigen::Matrix<T, dim, 1> normal = pos - this->center;
@@ -43,9 +45,12 @@ bool Sphere<T, dim>::checkCollisions(const Eigen::Matrix<T, dim, 1> &pos, Eigen:
 
             out_pos =  normal + this->center;
             
+            //std::cout << this->center[0] << " " << this->center[1] << " " << this->center[2] << std::endl;
+
             return true;
         }
-    }
+    //}
+/*
     else if (dim == 2) {
         if (((pos[0] - this->center[0]) * (pos[0] - this->center[0])) + 
             ((pos[1] - this->center[1]) * (pos[1] - this->center[1])) + 
@@ -62,7 +67,7 @@ bool Sphere<T, dim>::checkCollisions(const Eigen::Matrix<T, dim, 1> &pos, Eigen:
             return true;
         }
     }
-
+*/
     return false;
 }
 
