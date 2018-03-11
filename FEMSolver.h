@@ -15,8 +15,8 @@
 #include <Eigen/IterativeLinearSolvers>
 #include <unsupported/Eigen/IterativeSolvers>
 
-//#define USE_EXPLICIT
-#define USE_IMPLICIT
+#define USE_EXPLICIT
+//#define USE_IMPLICIT
 //#define WORK_IN_PROGRESS
 #ifdef WORK_IN_PROGRESS
 #include "utility/MINRES.h"
@@ -28,9 +28,9 @@ template<class T, int dim>
 double TetraMesh<T,dim>::k = 10000;
 template<class T, int dim>
 double TetraMesh<T,dim>::nu = 0.2;
-const int divisor = 1;
-constexpr float cTimeStep = 1/(24.f*divisor); //0.001f;
-const float gravity = 1.0f;
+const int divisor = 10000;
+constexpr float cTimeStep = 1.f/(divisor); //0.001f;
+const float gravity = 0.1f;
 
 // 24 frames per second
 // mesh resolution
@@ -114,13 +114,13 @@ template<class T, int dim>
 void FEMSolver<T,dim>::cookMyJello() {
 
     // Create a basic ground plane
-    //DefaultScene<T, dim> scene = DefaultScene<T, dim>();
+    DefaultScene<T, dim> scene = DefaultScene<T, dim>();
 
     // Create plinko scene
     //PlinkoScene<T, dim> scene = PlinkoScene<T, dim>();
 
     // Create a sphere collision scene
-    BulldozeScene<T, dim> scene = BulldozeScene<T, dim>();
+    //BulldozeScene<T, dim> scene = BulldozeScene<T, dim>();
 
     // calculate deformation constants
     calculateMaterialConstants();
@@ -157,7 +157,7 @@ void FEMSolver<T,dim>::cookMyJello() {
     //     mTetraMesh->mParticles.positions[i] *= 0.75;
     // }
 
-    int numSteps = (mSteps / 24) / (cTimeStep);
+    int numSteps = (mSteps) / (cTimeStep);
 
     // <<<<< Time Loop BEGIN
     int currFrame = 0;
