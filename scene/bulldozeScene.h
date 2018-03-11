@@ -27,9 +27,9 @@ BulldozeScene<T, dim>::BulldozeScene() {
 
     // Create sphere moving
     Shape<T, dim>* sphereA = new Sphere<T, dim>("bulldoze_output");
-    Eigen::Matrix<T,dim,1> aCenter = Eigen::Matrix<T,dim,1>(-2.0, -0.5f, -2.0);
+    Eigen::Matrix<T,dim,1> aCenter = Eigen::Matrix<T,dim,1>(-1.5, -0.5f, -1.5);
     sphereA->setCenter(aCenter);
-    Eigen::Matrix<T,dim,1> aVel = Eigen::Matrix<T,dim,1>(0.005, 0.0, 0.005);
+    Eigen::Matrix<T,dim,1> aVel = Eigen::Matrix<T,dim,1>(0.008, 0.0, 0.008);
     sphereA->setVelocity(aVel);
     this->shapes.push_back(sphereA);
 

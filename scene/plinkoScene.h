@@ -31,7 +31,7 @@ PlinkoScene<T, dim>::PlinkoScene() {
 
     // Create sphere B
     Shape<T, dim>* sphereB = new Sphere<T, dim>();
-    Eigen::Matrix<T,dim,1> bCenter = Eigen::Matrix<T,dim,1>(3.0, -3.0, 0.5);
+    Eigen::Matrix<T,dim,1> bCenter = Eigen::Matrix<T,dim,1>(3.0, -3.0f, 0.5);
     sphereB->setCenter(bCenter);
     this->shapes.push_back(sphereB);
 
