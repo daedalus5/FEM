@@ -136,7 +136,8 @@ void TetraMesh<T,dim>::generateTetras(){
 
             for(int i = 0; i < numVerts; i++)
             {
-                    instream >> a >> b >> c >> d >> e;
+                    //instream >> a >> b >> c >> d >> e;
+                    instream >> a >> b >> c >> d;
 
                     // output faces
                     outObject << "f " << b << " " << " " << c <<  " " << " " << d << std::endl;
