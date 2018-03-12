@@ -28,7 +28,7 @@ template<class T, int dim>
 double TetraMesh<T,dim>::k = 10000;
 template<class T, int dim>
 double TetraMesh<T,dim>::nu = 0.2;
-const int divisor = 1152;
+const int divisor = 6000;
 constexpr float cTimeStep = 1.0/(24.f*divisor); //0.001f;
 const float gravity = 1.0f;
 
