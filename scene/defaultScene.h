@@ -24,5 +24,7 @@ DefaultScene<T, dim>::DefaultScene() {
     Eigen::Matrix<T,dim,1> gCenter = Eigen::Matrix<T,dim,1>(0.f, -2.f, 0.f);
     ground->setCenter(gCenter);
     this->shapes.push_back(ground);
+    Eigen::Matrix<T,dim,1> gCenter = Eigen::Matrix<T,dim,1>(0.f, -1.f, 0.f);
+    ground->setCenter(gCenter);
 
 }
