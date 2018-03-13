@@ -25,23 +25,23 @@
 
 // values are for rubber;
 template<class T, int dim>
-double TetraMesh<T,dim>::k = 10000;
+double TetraMesh<T,dim>::k = 500000.f;
 template<class T, int dim>
-double TetraMesh<T,dim>::nu = 0.2;
+double TetraMesh<T,dim>::nu = 0.3f;
 const int divisor = 600;
-const float fps = 48.f;
-const float cTimeStep = 1.0/(fps*divisor); //0.001f;
-const float gravity = 9.8f;
-const float epsilon = 1E-5;
+const double fps = 48.f;
+const double cTimeStep = 1.0/(fps*divisor); //0.001f;
+const double gravity = 9.8f;
+const double epsilon = 1e-5;
 
-inline float epsilonCheck(float n) {
+inline double epsilonCheck(double n) {
     if (std::abs(n) < epsilon) {
-        return 0.f;
+        return 0;
     }
     return n;
 }
 
-inline float epsilonCheckSquareMatrix(Eigen::Matrix<T,dim,dim> &matrix) {
+inline double epsilonCheckSquareMatrix(Eigen::Matrix<T,dim,dim> &matrix) {
     // epsilon check
     for (int i = 0; i < dim; ++i) {
         for (int j = 0; j < dim; ++j) {
@@ -85,22 +85,22 @@ private:
     void distributeMass();          // distributes tetrahedron mass to its constituent particles
 
     // helper functions for computeK
-    float DsqPsiDsqF(int j, int k, int m, int n,
+    double DsqPsiDsqF(int j, int k, int m, int n,
                     const Eigen::Matrix<T,dim,dim>& F,
                     const Eigen::Matrix<T,dim,dim>& JFinvT,
                     const Eigen::Matrix<T,dim,dim>& R,
                     const Eigen::Matrix<T,dim,dim>& S);
-    float DFDx(int m, int n, int q, int r, const Tetrahedron<T,dim>& t);
+    double DFDx(int m, int n, int q, int r, const Tetrahedron<T,dim>& t);
     // helper functions for DsPsiDsqF
-    float DFDF(int j, int k, int m, int n);
-    float DRDF(int j, int k, int m, int n,
+    double DFDF(int j, int k, int m, int n);
+    double DRDF(int j, int k, int m, int n,
                 const Eigen::Matrix<T,dim,dim>& R,
                 const Eigen::Matrix<T,dim,dim>& S);
-    float DHDF(int j, int k, int m, int n,
+    double DHDF(int j, int k, int m, int n,
                 const Eigen::Matrix<T,dim,dim>& F);
     void computeAinv(Eigen::Matrix<T,dim,dim>& A,
                 const Eigen::Matrix<T,dim,dim>& S);
-    float leviCevita(int i, int j, int k);
+    double leviCevita(int i, int j, int k);
 
 
 public:
@@ -112,8 +112,7 @@ public:
 };
 
 template<class T, int dim>
-FEMSolver<T,dim>::FEMSolver(int steps) : mTetraMesh(TetraMesh<T,dim>("objects/cube.1")), mSteps(steps), mu(0.0), lambda(0.0), mExplicitIntegrator("explicit"), mImplicitIntegrator("implicit") {
-    // mTetraMesh.generateTetras();
+FEMSolver<T,dim>::FEMSolver(int steps) : mTetraMesh(TetraMesh<T,dim>("objects/cube.1")), mSteps(steps), mu(0.0f), lambda(0.0f), mExplicitIntegrator("explicit"), mImplicitIntegrator("implicit") {
 }
 
 template<class T, int dim>
@@ -123,12 +122,9 @@ FEMSolver<T,dim>::~FEMSolver(){
 
 template<class T, int dim>
 void FEMSolver<T,dim>::initializeMesh() {
-
-    // Initialize mTetraMesh here
     mTetraMesh.generateTetras();
     // mTetraMesh = new TetraMesh<T,dim>("objects/cube.1");
     // mTetraMesh->generateTetras();
-    //mTetraMesh->generateSimpleTetrahedron();
 }
 
 template<class T, int dim>
@@ -164,8 +160,6 @@ void FEMSolver<T,dim>::cookMyJello() {
     Eigen::Matrix<T,dim,dim> P = Eigen::Matrix<T,dim,dim>::Zero(dim,dim);
     // Force matrix
     Eigen::Matrix<T,dim,dim> G = Eigen::Matrix<T,dim,dim>::Zero(dim,dim);
-    // momentum conservation
-    Eigen::Matrix<T,dim,1> force = Eigen::Matrix<T,dim,1>::Zero(dim);
     // det(F) * (F^-1)^T term
     Eigen::Matrix<T,dim,dim> JFinvT = Eigen::Matrix<T,dim,dim>::Zero(dim,dim);
 
@@ -173,9 +167,9 @@ void FEMSolver<T,dim>::cookMyJello() {
     //std::vector<Eigen::Matrix<T, dim, 1>> past_pos(mTetraMesh->mParticles.positions);
     Eigen::Matrix<T, dim, 1> temp_pos = Eigen::Matrix<T,dim,1>::Zero(dim);
 
-    // //<<<<< FOR SCALING TEST
+    //<<<<< FOR SCALING TEST
     // for(int i = 0; i < size; ++i){
-    //     mTetraMesh.mParticles.positions[i] *= 0.9;
+    //     mTetraMesh.mParticles.positions[i] += Eigen::Matrix<T,dim,1>(1.0f,0.0,0.0);
     // }
 
     int numSteps = (mSteps / fps) / (cTimeStep);
@@ -188,24 +182,21 @@ void FEMSolver<T,dim>::cookMyJello() {
         mTetraMesh.mParticles.zeroForces();
         // <<<<< force update BEGIN
         for(Tetrahedron<T,dim> &t : mTetraMesh.mTetras){
-            force = Eigen::Matrix<T,dim,1>::Zero(dim);
             computeDs(Ds, t);
             computeF(F, Ds, t);
             computeRS(R, S, F);
             computeJFinvT(JFinvT, F);
-            float J = F.determinant();
+            double J = F.determinant();
             P = 2.f * mu * (F - R) + lambda * (J - 1.f) * JFinvT;
             //P = mu * (F - (1.f/J) * JFinvT) + lambda * std::log(J) * (1.f/J) * JFinvT;
-            G = P * t.mVolDmInvT;
+            epsilonCheckSquareMatrix(P);
+            G = -1 * P * t.mVolDmInvT;
+            epsilonCheckSquareMatrix(G);
 
-            for(int j = 1; j < dim + 1; ++j){
-                if(G.col(j - 1).norm() > 1E-10){
-                    mTetraMesh.mParticles.forces[t.mPIndices[j]] += G.col(j - 1);
-                    force += G.col(j - 1);
-                }
+            for(int j = 0; j < dim; ++j){
+                mTetraMesh.mParticles.forces[t.mPIndices[j]] += G.col(j);
             }
-            mTetraMesh.mParticles.forces[t.mPIndices[0]] += -force;
-
+            mTetraMesh.mParticles.forces[t.mPIndices[3]] += -1.f * (G.col(0) + G.col(1) + G.col(2));
         }
         // <<<<< force update END
         // <<<<< Integration BEGIN
@@ -224,7 +215,7 @@ void FEMSolver<T,dim>::cookMyJello() {
             currState.mComponents[POS] = mTetraMesh.mParticles.positions[j];
             currState.mComponents[VEL] = mTetraMesh.mParticles.velocities[j];
             currState.mMass = mTetraMesh.mParticles.masses[j];
-            currState.mComponents[FOR] = mTetraMesh.mParticles.forces[j] / currState.mMass + Eigen::Matrix<T,dim,1>(0, -gravity, 0);
+            currState.mComponents[FOR] = mTetraMesh.mParticles.forces[j] * (1.f / currState.mMass) + Eigen::Matrix<T,dim,1>(0, -gravity, 0);
             //currState.mComponents[FOR] = mTetraMesh.mParticles.forces[j] / currState.mMass;
 
             mExplicitIntegrator.integrate(cTimeStep, 0, currState, newState);
@@ -232,15 +223,15 @@ void FEMSolver<T,dim>::cookMyJello() {
             scene.updatePosition(cTimeStep);
 
             //<<<<<< FOR SCENE COLLISIONS
-            if(scene.checkCollisions(newState.mComponents[POS], temp_pos)){
-                newState.mComponents[POS] = temp_pos;
-                newState.mComponents[VEL] = (temp_pos - currState.mComponents[POS]) / cTimeStep;
-            }
-
             // if(scene.checkCollisions(newState.mComponents[POS], temp_pos)){
-            //     newState.mComponents[POS] = currState.mComponents[POS];
-            //     newState.mComponents[VEL] = Eigen::Matrix<T,dim,1>(0,0,0);
+            //     newState.mComponents[POS] = temp_pos;
+            //     newState.mComponents[VEL] = (temp_pos - currState.mComponents[POS]) / cTimeStep;
             // }
+
+            if(scene.checkCollisions(newState.mComponents[POS], temp_pos)){
+                newState.mComponents[POS] = currState.mComponents[POS];
+                newState.mComponents[VEL] = Eigen::Matrix<T,dim,1>(0,0,0);
+            }
 
             // <<<<<< FOR HANGING TESTS
             // if(currState.mComponents[POS][0] <= 0.001){
@@ -251,19 +242,6 @@ void FEMSolver<T,dim>::cookMyJello() {
             mTetraMesh.mParticles.positions[j] = newState.mComponents[POS];
             mTetraMesh.mParticles.velocities[j] = newState.mComponents[VEL];
 
-            // <<<<< FOR PULLING A CORNER
-            // if(i == 1800 && j == 6){
-            //     mTetraMesh->mParticles.positions[j] += Eigen::Matrix<T,dim,1>(0.2, 0.2, 0.2);
-            // }
-            // if(i == 1800 && j == 26){
-            //     mTetraMesh->mParticles.positions[j] += Eigen::Matrix<T,dim,1>(0.1, 0.1, 0.1);
-            // }
-            // if(i == 1800 && j == 31){
-            //     mTetraMesh->mParticles.positions[j] += Eigen::Matrix<T,dim,1>(0.1, 0.1, 0.1);
-            // }
-            // if(i == 1800 && j == 38){
-            //     mTetraMesh->mParticles.positions[j] += Eigen::Matrix<T,dim,1>(0.1, 0.1, 0.1);
-            // }
         }
 
 #endif
@@ -276,7 +254,7 @@ void FEMSolver<T,dim>::cookMyJello() {
         const int dimen = dim * n;
 
         // 1. Calculate A Matrix Here
-        float a1 = mTetraMesh->mParticles.masses[0] / (cTimeStep * cTimeStep);
+        double a1 = mTetraMesh->mParticles.masses[0] / (cTimeStep * cTimeStep);
 
         Eigen::MatrixXf A1Mat(dimen, 1);
         A1Mat.setConstant(a1);
@@ -300,7 +278,7 @@ void FEMSolver<T,dim>::cookMyJello() {
 
         // 4. Calculate B Matrix
 
-        float b1 = mTetraMesh->mParticles.masses[0] / (cTimeStep);
+        double b1 = mTetraMesh->mParticles.masses[0] / (cTimeStep);
         Eigen::MatrixXf B1Mat(dimen, 1);
 
         for(int d = 0; d < size; ++d) {
@@ -379,8 +357,8 @@ void FEMSolver<T,dim>::cookMyJello() {
 
 template<class T, int dim>
 void FEMSolver<T,dim>::calculateMaterialConstants(){
-    mu = TetraMesh<T,dim>::k / (2 * (1. + TetraMesh<T,dim>::nu));
-    lambda = (TetraMesh<T,dim>::k * TetraMesh<T,dim>::nu) / ((1. + TetraMesh<T,dim>::nu)*(1. - 2*TetraMesh<T,dim>::nu));
+    mu = TetraMesh<T,dim>::k / (2.f * (1.f + TetraMesh<T,dim>::nu));
+    lambda = (TetraMesh<T,dim>::k * TetraMesh<T,dim>::nu) / ((1.f + TetraMesh<T,dim>::nu)*(1.f - 2.f*TetraMesh<T,dim>::nu));
 }
 
 template<class T, int dim>
@@ -401,8 +379,8 @@ void FEMSolver<T,dim>::computeDs(Eigen::Matrix<T,dim,dim>& Ds, const Tetrahedron
     for(int i = 0; i < dim + 1; ++i){
         x.push_back(mTetraMesh.mParticles.positions[t.mPIndices[i]]);
     }
-    for(int i = 1; i < dim + 1; ++i){
-        Ds.col(i - 1) = x[i] - x[0];
+    for(int i = 0; i < dim; ++i){
+        Ds.col(i) = x[i] - x[3];
     }
 
     epsilonCheckSquareMatrix(Ds);
@@ -432,11 +410,11 @@ void FEMSolver<T,dim>::computeRS(Eigen::Matrix<T,dim,dim>& R,
     }
     epsilonCheckSquareMatrix(sigma);
 
-    if(U.determinant() < 0){
+    if(U.determinant() < 0.f){
         U.col(dim - 1) = -1 * U.col(dim - 1);
         sigma(dim - 1, dim - 1) = -1 * sigma(dim - 1, dim - 1);
     }
-    if(V.determinant() < 0){
+    if(V.determinant() < 0.f){
         V.col(dim - 1) = -1 * V.col(dim - 1);
         sigma(dim - 1, dim - 1) = -1 * sigma(dim - 1, dim - 1);
     }
@@ -458,18 +436,18 @@ void FEMSolver<T,dim>::computeJFinvT(Eigen::Matrix<T,dim,dim>& JFinvT, const Eig
             break;
         case 3:
             JFinvT(0,0) = F(1,1)*F(2,2) - F(1,2)*F(2,1);
-            JFinvT(0,1) = F(0,2)*F(2,1) - F(0,1)*F(2,2);
-            JFinvT(0,2) = F(0,1)*F(1,2) - F(0,2)*F(1,1);
-            JFinvT(1,0) = F(1,2)*F(2,0) - F(1,0)*F(2,2);
+            JFinvT(1,0) = F(0,2)*F(2,1) - F(0,1)*F(2,2);
+            JFinvT(2,0) = F(0,1)*F(1,2) - F(0,2)*F(1,1);
+            JFinvT(0,1) = F(1,2)*F(2,0) - F(1,0)*F(2,2);
             JFinvT(1,1) = F(0,0)*F(2,2) - F(0,2)*F(2,0);
-            JFinvT(1,2) = F(0,2)*F(1,0) - F(0,0)*F(1,2);
-            JFinvT(2,0) = F(1,0)*F(2,1) - F(1,1)*F(2,0);
-            JFinvT(2,1) = F(0,1)*F(2,0) - F(0,0)*F(2,1);
+            JFinvT(2,1) = F(0,2)*F(1,0) - F(0,0)*F(1,2);
+            JFinvT(0,2) = F(1,0)*F(2,1) - F(1,1)*F(2,0);
+            JFinvT(1,2) = F(0,1)*F(2,0) - F(0,0)*F(2,1);
             JFinvT(2,2) = F(0,0)*F(1,1) - F(0,1)*F(1,0);
             break;
         default: std::cout << "error: dimension must be 2 or 3" << std::endl;
     }
-    JFinvT.transposeInPlace();
+    // transpose is now hard-coded!!
     epsilonCheckSquareMatrix(JFinvT);
 }
 
@@ -478,26 +456,10 @@ void FEMSolver<T,dim>::distributeMass(){
     for(Tetrahedron<T,dim> &t : mTetraMesh.mTetras){
         for(int i = 0; i < dim + 1; ++i){
             // distribute 1/4 of mass to each tetrahedron point
-            mTetraMesh.mParticles.masses[t.mPIndices[i]] += 0.25 * t.mass;
+            mTetraMesh.mParticles.masses[t.mPIndices[i]] += 0.25f * t.mass;
             mTetraMesh.mParticles.tets[t.mPIndices[i]] += 1;
         }
     }
-    // float maxConnectivity = 0;
-    // int size = mTetraMesh.mParticles.masses.size();
-    // for(int i = 0; i < size; ++i){
-    //     if(mTetraMesh.mParticles.tets[i] > maxConnectivity){
-    //         maxConnectivity = mTetraMesh.mParticles.tets[i];
-    //     }
-    // }
-    // for(int i = 0; i < size; ++i){
-    //     switch(mTetraMesh.mParticles.tets[i]){
-    //         case 1: mTetraMesh.mParticles.masses[i] *= maxConnectivity; break;
-    //         case 2: mTetraMesh.mParticles.masses[i] *= (maxConnectivity - 1); break;
-    //         case 3: mTetraMesh.mParticles.masses[i] *= (maxConnectivity - 2); break;
-    //         case 4: mTetraMesh.mParticles.masses[i] *= (maxConnectivity - 3); break;
-    //         default: ; 
-    //     }
-    // }
 }
 
 //////// K MATRIX COMPUTATION //////////
@@ -542,7 +504,7 @@ void FEMSolver<T,dim>::computeK(Eigen::MatrixXf& KMatrix,
 }
 
 template<class T, int dim>
-float FEMSolver<T,dim>::DsqPsiDsqF(int j, int k, int m, int n,
+double FEMSolver<T,dim>::DsqPsiDsqF(int j, int k, int m, int n,
                     const Eigen::Matrix<T,dim,dim>& F,
                     const Eigen::Matrix<T,dim,dim>& JFinvT,
                     const Eigen::Matrix<T,dim,dim>& R,
@@ -552,8 +514,8 @@ float FEMSolver<T,dim>::DsqPsiDsqF(int j, int k, int m, int n,
 }
 
 template<class T, int dim>
-float FEMSolver<T,dim>::DFDx(int m, int n, int q, int r, const Tetrahedron<T,dim>& t){
-    float val = 0.0;
+double FEMSolver<T,dim>::DFDx(int m, int n, int q, int r, const Tetrahedron<T,dim>& t){
+    double val = 0.0;
     if(q == 0){
         for(int l = 0; l < dim; ++l){
             if(r == m){
@@ -572,7 +534,7 @@ float FEMSolver<T,dim>::DFDx(int m, int n, int q, int r, const Tetrahedron<T,dim
 }
 
 template<class T, int dim>
-float FEMSolver<T,dim>::DFDF(int j, int k, int m, int n)
+double FEMSolver<T,dim>::DFDF(int j, int k, int m, int n)
 {
     if(j == k && k == n){
         return 1.0;
@@ -583,13 +545,13 @@ float FEMSolver<T,dim>::DFDF(int j, int k, int m, int n)
 }
 
 template<class T, int dim>
-float FEMSolver<T,dim>::DRDF(int j, int k, int m, int n,
+double FEMSolver<T,dim>::DRDF(int j, int k, int m, int n,
             const Eigen::Matrix<T,dim,dim>& R,
             const Eigen::Matrix<T,dim,dim>& S)
 {
     Eigen::Matrix<T,dim,dim> Ainv = Eigen::Matrix<T,dim,dim>::Zero(dim,dim);
     computeAinv(Ainv, S);
-    float val = 0.0;
+    double val = 0.0;
     for(int a = 0; a < dim; ++a){
         for(int b = 0; b < dim; ++b){
             for(int c = 0; c < dim; ++c){
@@ -606,7 +568,7 @@ template<class T, int dim>
 void FEMSolver<T,dim>::computeAinv(Eigen::Matrix<T,dim,dim>& A,
             const Eigen::Matrix<T,dim,dim>& S)
 {
-    float val = 0.0;
+    double val = 0.0;
     for(int i = 0; i < dim; ++i){
         for(int j = 0; j < dim; ++j){
             val = 0.0;
@@ -624,7 +586,7 @@ void FEMSolver<T,dim>::computeAinv(Eigen::Matrix<T,dim,dim>& A,
 }
 
 template<class T, int dim>
-float FEMSolver<T,dim>::DHDF(int j, int k, int m, int n,
+double FEMSolver<T,dim>::DHDF(int j, int k, int m, int n,
             const Eigen::Matrix<T,dim,dim>& F)
 {
     Eigen::Matrix<T,dim,dim> dHdF = Eigen::Matrix<T,dim,dim>::Zero(dim, dim);
@@ -679,7 +641,7 @@ float FEMSolver<T,dim>::DHDF(int j, int k, int m, int n,
     return dHdF(j, k);
 }
 template<class T, int dim>
-float FEMSolver<T,dim>::leviCevita(int i, int j, int k){
+double FEMSolver<T,dim>::leviCevita(int i, int j, int k){
     // even cases
     if(i == 0 && j == 1 && k == 2){
         return 1.0;

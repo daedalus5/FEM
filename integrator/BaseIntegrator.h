@@ -33,7 +33,7 @@ public:
 
     ~BaseIntegrator();
 
-    virtual void integrate(float timeStep, int params, const State<T, dim> &currentState, State<T, dim> &newState) = 0;
+    virtual void integrate(double timeStep, int params, const State<T, dim> &currentState, State<T, dim> &newState) = 0;
 
     const std::string& name() const;
 

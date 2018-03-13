@@ -29,9 +29,9 @@ template<class T, int dim>
 Tetrahedron<T,dim>::Tetrahedron(const std::vector<int>& indices) :
                                 mPIndices(indices),
                                 mDmInv(Eigen::Matrix<T,dim,dim>::Zero(dim, dim)),
-                                volume(0.0),
+                                volume(0.0f),
                                 mVolDmInvT(Eigen::Matrix<T,dim,dim>::Zero(dim, dim)),
-                                mass(0.0) {}
+                                mass(0.0f) {}
 
 template<class T, int dim>
 Tetrahedron<T,dim>::~Tetrahedron(){}
@@ -39,12 +39,12 @@ Tetrahedron<T,dim>::~Tetrahedron(){}
 template<class T, int dim>
 void Tetrahedron<T,dim>::precompute(const std::vector<Eigen::Matrix<T,dim,1>>& x){
     Eigen::Matrix<T,dim,dim> Dm = Eigen::Matrix<T,dim,dim>::Zero(dim,dim);
-    for(int i = 1; i < dim + 1; ++i){
-        Dm.col(i - 1) = x[i] - x[0];
+    for(int i = 0; i < dim; ++i){
+        Dm.col(i) = x[i] - x[3];
     }
     switch(dim){
         case 2: volume = std::abs(Dm.determinant() / 2.f); break;
-        case 3: volume = std::abs(Dm.determinant() / 6.f); break;
+        case 3: volume = std::abs(Dm.determinant()) * 0.16666666666667f; break;
         default: std::cout << "error: dimension must be 2 or 3" << std::endl;
     }
     if(volume != 0){    // check if Dm is nonsingular
@@ -53,8 +53,8 @@ void Tetrahedron<T,dim>::precompute(const std::vector<Eigen::Matrix<T,dim,1>>& x
     else{
         std::cout << "bad tetrahedron" << std::endl;
     }
-    mVolDmInvT = -1 * volume * (mDmInv.transpose());
-    mass = 3000 * volume; // density is 1000
+    mVolDmInvT = volume * (mDmInv.transpose());
+    mass = 1000.f * volume; // density is 1000
 }
 
 template<class T, int dim>

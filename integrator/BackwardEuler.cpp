@@ -5,17 +5,17 @@ BackwardEuler::BackwardEuler(std::string name) : BaseIntegrator(name) {}
 
 BackwardEuler::~BackwardEuler() {}
 
-void BackwardEuler::integrate(float timeStep, int params, const State<T, dim> &currentState, State<T, dim> &newState) {
+void BackwardEuler::integrate(double timeStep, int params, const State<T, dim> &currentState, State<T, dim> &newState) {
 
 
-    float mass = currentState.mMass;
+    double mass = currentState.mMass;
     Eigen::Matrix<T, dim, 1> velocity = currentState.mComponents[VEL];
     Eigen::Matrix<T, dim, 1> force = currentState.mComponents[FOR];
 
     //Eigen::Matrix<T, dim, 1> B = mass * velocity / timeStep + force;
     Eigen::Matrix<T, dim, dim> A = Eigen::Matrix<T,dim,dim>::Zero(dim,dim);
 
-    float temp = mass / (timeStep * timeStep);
+    double temp = mass / (timeStep * timeStep);
 
     A(0, 0) = temp;
     A(1, 1) = temp;
