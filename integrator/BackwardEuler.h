@@ -10,7 +10,7 @@ public:
 
     ~BackwardEuler();
 
-    virtual void integrate(float timeStep, int params, const State<T, dim> &currentState, State<T, dim> &newState);
+    virtual void integrate(T timeStep, int params, const State<T, dim> &currentState, State<T, dim> &newState);
 
 };
 
@@ -22,7 +22,7 @@ template<class T, int dim>
 BackwardEuler<T, dim>::~BackwardEuler() {}
 
 template<class T, int dim>
-void BackwardEuler<T, dim>::integrate(float timeStep, int params, const State<T, dim> &currentState, State<T, dim> &newState) {
+void BackwardEuler<T, dim>::integrate(T timeStep, int params, const State<T, dim> &currentState, State<T, dim> &newState) {
 
 
     float mass = currentState.mMass;

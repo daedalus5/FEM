@@ -7,5 +7,5 @@
 
 using Eigen::MatrixXd;
 
-using T = float;
+using T = double;
 const int dim = 3;
