@@ -18,6 +18,7 @@ public:
 	std::vector<Eigen::Matrix<T, dim, 1>> forces;
 	std::vector<Eigen::Matrix<T, dim, 1>> drags;
 	std::vector<T> masses;
+    std::vector<int> tets;
 
 	Particles();
 	~Particles();
