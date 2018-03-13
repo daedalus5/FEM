@@ -29,9 +29,26 @@ double TetraMesh<T,dim>::k = 10000;
 template<class T, int dim>
 double TetraMesh<T,dim>::nu = 0.2;
 const int divisor = 600;
-const float fps = 24.f;
+const float fps = 48.f;
 const float cTimeStep = 1.0/(fps*divisor); //0.001f;
 const float gravity = 1.0f;
+const float epsilon = 1E-5;
+
+inline float epsilonCheck(float n) {
+    if (std::abs(n) < epsilon) {
+        return 0.f;
+    }
+    return n;
+}
+
+inline float epsilonCheckSquareMatrix(Eigen::Matrix<T,dim,dim> &matrix) {
+    // epsilon check
+    for (int i = 0; i < dim; ++i) {
+        for (int j = 0; j < dim; ++j) {
+            matrix(i, j) = epsilonCheck(matrix(i, j));
+        }
+    }
+}
 
 // 24 frames per second
 // mesh resolution
@@ -377,6 +394,8 @@ void FEMSolver<T,dim>::computeDs(Eigen::Matrix<T,dim,dim>& Ds, const Tetrahedron
     for(int i = 1; i < dim + 1; ++i){
         Ds.col(i - 1) = x[i] - x[0];
     }
+
+    epsilonCheckSquareMatrix(Ds);
 }
 
 template<class T, int dim>
@@ -384,6 +403,7 @@ void FEMSolver<T,dim>::computeF(Eigen::Matrix<T,dim,dim>& F,
                     const Eigen::Matrix<T,dim,dim>& Ds,
                     const Tetrahedron<T,dim>& t){
     F = Ds * t.mDmInv;
+    epsilonCheckSquareMatrix(F);
 }
 
 template<class T, int dim>
@@ -392,12 +412,15 @@ void FEMSolver<T,dim>::computeRS(Eigen::Matrix<T,dim,dim>& R,
                     const Eigen::Matrix<T,dim,dim>& F){
     Eigen::JacobiSVD<Eigen::Matrix<T,dim,dim>> svd(F, Eigen::ComputeFullU | Eigen::ComputeFullV);
     Eigen::Matrix<T,dim,dim> U = svd.matrixU();
+    epsilonCheckSquareMatrix(U);
     Eigen::Matrix<T,dim,dim> V = svd.matrixV();
+    epsilonCheckSquareMatrix(V);
     Eigen::Matrix<T,dim,dim> sigma = Eigen::Matrix<T,dim,dim>::Zero(dim, dim);
 
     for(int i = 0; i < dim; ++i){
         sigma(i, i) = svd.singularValues()[i];
     }
+    epsilonCheckSquareMatrix(sigma);
 
     if(U.determinant() < -1E-5){
         U.col(dim - 1) = -1 * U.col(dim - 1);
@@ -409,7 +432,9 @@ void FEMSolver<T,dim>::computeRS(Eigen::Matrix<T,dim,dim>& R,
     }
 
     R = U * V.transpose();
+    epsilonCheckSquareMatrix(R);
     S = V * sigma * V.transpose();
+    epsilonCheckSquareMatrix(S);
 }
 
 template<class T, int dim>
@@ -435,6 +460,7 @@ void FEMSolver<T,dim>::computeJFinvT(Eigen::Matrix<T,dim,dim>& JFinvT, const Eig
         default: std::cout << "error: dimension must be 2 or 3" << std::endl;
     }
     JFinvT.transposeInPlace();
+    epsilonCheckSquareMatrix(JFinvT);
 }
 
 template<class T, int dim>
@@ -651,3 +677,4 @@ float FEMSolver<T,dim>::leviCevita(int i, int j, int k){
         return 0.0;
     }
 }
+
