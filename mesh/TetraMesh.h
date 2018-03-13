@@ -76,6 +76,7 @@ void TetraMesh<T,dim>::generateTetras(){
                     this->mParticles.masses.push_back(0.0);
                     this->mParticles.forces.push_back(Eigen::Matrix<T,dim,1>(0.0,0.0,0.0));
                     this->mParticles.drags.push_back(Eigen::Matrix<T,dim,1>(0.0,0.0,0.0));
+                    this->mParticles.tets.push_back(0);
 
                     outFile << x1 << ": " << x2 << " " << x3 << " " << x4 << "\n";  // .poly
                     outObject << "v " << x2 << " " << x3 << " " << x4 << std::endl; // .obj
@@ -136,8 +137,8 @@ void TetraMesh<T,dim>::generateTetras(){
 
             for(int i = 0; i < numVerts; i++)
             {
-                    //instream >> a >> b >> c >> d >> e;
-                    instream >> a >> b >> c >> d;
+                    instream >> a >> b >> c >> d >> e;
+                    //instream >> a >> b >> c >> d;
 
                     // output faces
                     outObject << "f " << b << " " << " " << c <<  " " << " " << d << std::endl;
