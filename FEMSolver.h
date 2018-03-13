@@ -29,8 +29,9 @@ double TetraMesh<T,dim>::k = 10000;
 template<class T, int dim>
 double TetraMesh<T,dim>::nu = 0.2;
 const int divisor = 600;
-constexpr float cTimeStep = 1.0/(24.f*divisor); //0.001f;
 const float gravity = 9.8f;
+const float fps = 24.f;
+const float cTimeStep = 1.0/(fps*divisor); //0.001f;
 
 // 24 frames per second
 // mesh resolution
@@ -160,7 +161,7 @@ void FEMSolver<T,dim>::cookMyJello() {
     //     mTetraMesh.mParticles.positions[i] *= 0.9;
     // }
 
-    int numSteps = (mSteps / 24.f) / (cTimeStep);
+    int numSteps = (mSteps / fps) / (cTimeStep);
 
     // <<<<< Time Loop BEGIN
     int currFrame = 0;
