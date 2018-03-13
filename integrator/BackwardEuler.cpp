@@ -1,11 +1,14 @@
 
 #include "BackwardEuler.h"
 
-BackwardEuler::BackwardEuler(std::string name) : BaseIntegrator(name) {}
+template<class T, int dim>
+BackwardEuler<T, dim>::BackwardEuler(std::string name) : BaseIntegrator<T, dim>(name) {}
 
-BackwardEuler::~BackwardEuler() {}
+template<class T, int dim>
+BackwardEuler<T, dim>::~BackwardEuler() {}
 
-void BackwardEuler::integrate(float timeStep, int params, const State<T, dim> &currentState, State<T, dim> &newState) {
+template<class T, int dim>
+void BackwardEuler<T, dim>::integrate(float timeStep, int params, const State<T, dim> &currentState, State<T, dim> &newState) {
 
 
     float mass = currentState.mMass;

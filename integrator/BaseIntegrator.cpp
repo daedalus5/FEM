@@ -1,9 +1,12 @@
 #include "BaseIntegrator.h"
 
-BaseIntegrator::BaseIntegrator(std::string name) : mName(name) {}
+template<class T, int dim>
+BaseIntegrator<T, dim>::BaseIntegrator(std::string name) : mName(name) {}
 
-BaseIntegrator::~BaseIntegrator() {}
+template<class T, int dim>
+BaseIntegrator<T, dim>::~BaseIntegrator() {}
 
-const std::string& BaseIntegrator::name() const{
+template<class T, int dim>
+const std::string& BaseIntegrator<T, dim>::name() const{
     return mName;
 }

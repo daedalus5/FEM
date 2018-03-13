@@ -25,7 +25,7 @@
 
 // values are for rubber;
 template<class T, int dim>
-double TetraMesh<T,dim>::k = 10000;
+double TetraMesh<T,dim>::k = 500000;
 template<class T, int dim>
 double TetraMesh<T,dim>::nu = 0.2;
 const int divisor = 600;
@@ -62,8 +62,8 @@ private:
     int mSteps;
     double mu;
     double lambda;
-    ForwardEuler mExplicitIntegrator;
-    BackwardEuler mImplicitIntegrator;
+    ForwardEuler<T, dim> mExplicitIntegrator;
+    BackwardEuler<T, dim> mImplicitIntegrator;
 
     void calculateMaterialConstants();    // calculates mu and lambda values for material
     void precomputeTetraConstants();      // precompute tetrahedron constant values
@@ -195,8 +195,10 @@ void FEMSolver<T,dim>::cookMyJello() {
             computeJFinvT(JFinvT, F);
             float J = F.determinant();
             P = 2.f * mu * (F - R) + lambda * (J - 1.f) * JFinvT;
+            epsilonCheckSquareMatrix(P);
             //P = mu * (F - (1.f/J) * JFinvT) + lambda * std::log(J) * (1.f/J) * JFinvT;
             G = P * t.mVolDmInvT;
+            epsilonCheckSquareMatrix(G);
 
             for(int j = 1; j < dim + 1; ++j){
                 if(G.col(j - 1).norm() > 1E-10){
@@ -224,8 +226,8 @@ void FEMSolver<T,dim>::cookMyJello() {
             currState.mComponents[POS] = mTetraMesh.mParticles.positions[j];
             currState.mComponents[VEL] = mTetraMesh.mParticles.velocities[j];
             currState.mMass = mTetraMesh.mParticles.masses[j];
-            currState.mComponents[FOR] = mTetraMesh.mParticles.forces[j] / currState.mMass + Eigen::Matrix<T,dim,1>(0, -gravity, 0);
-            //currState.mComponents[FOR] = mTetraMesh.mParticles.forces[j] / currState.mMass;
+            //currState.mComponents[FOR] = mTetraMesh.mParticles.forces[j] / currState.mMass + Eigen::Matrix<T,dim,1>(0, -gravity, 0);
+            currState.mComponents[FOR] = mTetraMesh.mParticles.forces[j] / currState.mMass;
 
             mExplicitIntegrator.integrate(cTimeStep, 0, currState, newState);
 
@@ -452,24 +454,24 @@ void FEMSolver<T,dim>::computeJFinvT(Eigen::Matrix<T,dim,dim>& JFinvT, const Eig
     switch(dim){
         case 2:
             JFinvT(0,0) = F(1,1);
-            JFinvT(0,1) = -F(0,1);
-            JFinvT(1,0) = -F(1,0);
+            JFinvT(1,0) = -F(0,1);
+            JFinvT(0,1) = -F(1,0);
             JFinvT(1,1) = F(0,0);
             break;
         case 3:
             JFinvT(0,0) = F(1,1)*F(2,2) - F(1,2)*F(2,1);
-            JFinvT(0,1) = F(0,2)*F(2,1) - F(0,1)*F(2,2);
-            JFinvT(0,2) = F(0,1)*F(1,2) - F(0,2)*F(1,1);
-            JFinvT(1,0) = F(1,2)*F(2,0) - F(1,0)*F(2,2);
+            JFinvT(1,0) = F(0,2)*F(2,1) - F(0,1)*F(2,2);
+            JFinvT(2,0) = F(0,1)*F(1,2) - F(0,2)*F(1,1);
+            JFinvT(0,1) = F(1,2)*F(2,0) - F(1,0)*F(2,2);
             JFinvT(1,1) = F(0,0)*F(2,2) - F(0,2)*F(2,0);
-            JFinvT(1,2) = F(0,2)*F(1,0) - F(0,0)*F(1,2);
-            JFinvT(2,0) = F(1,0)*F(2,1) - F(1,1)*F(2,0);
-            JFinvT(2,1) = F(0,1)*F(2,0) - F(0,0)*F(2,1);
+            JFinvT(2,1) = F(0,2)*F(1,0) - F(0,0)*F(1,2);
+            JFinvT(0,2) = F(1,0)*F(2,1) - F(1,1)*F(2,0);
+            JFinvT(1,2) = F(0,1)*F(2,0) - F(0,0)*F(2,1);
             JFinvT(2,2) = F(0,0)*F(1,1) - F(0,1)*F(1,0);
             break;
         default: std::cout << "error: dimension must be 2 or 3" << std::endl;
     }
-    JFinvT.transposeInPlace();
+    //JFinvT.transposeInPlace();
     epsilonCheckSquareMatrix(JFinvT);
 }
 

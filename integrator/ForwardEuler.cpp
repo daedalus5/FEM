@@ -1,12 +1,14 @@
 
 #include "ForwardEuler.h"
 
-ForwardEuler::ForwardEuler(std::string name) : BaseIntegrator(name) {}
+template<class T, int dim>
+ForwardEuler<T, dim>::ForwardEuler(std::string name) : BaseIntegrator<T, dim>(name) {}
 
+template<class T, int dim>
+ForwardEuler<T, dim>::~ForwardEuler() {}
 
-ForwardEuler::~ForwardEuler() {}
-
-void ForwardEuler::integrate(float timeStep, int params, const State<T, dim> &currentState, State<T, dim> &newState) {
+template<class T, int dim>
+void ForwardEuler<T, dim>::integrate(float timeStep, int params, const State<T, dim> &currentState, State<T, dim> &newState) {
 
     if(currentState.mComponents.size() == 0) {
         return;
