@@ -6,7 +6,7 @@ int main()
 {
     // Cook My Jello!
 
-    FEMSolver<double,3> solver(288);
+    FEMSolver<double,3> solver(999);
     solver.initializeMesh();
     solver.cookMyJello();
 
