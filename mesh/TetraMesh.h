@@ -71,6 +71,7 @@ void TetraMesh<T,dim>::generateTetras(){
             for(int i = 0; i < numVerts; i++)
             {
                     instream >> x1 >> x2 >> x3 >> x4;
+                    x4 = -x4; //Because tetgen is left-handed, we need to negate z component
                     this->mParticles.positions.push_back(Eigen::Matrix<T,dim,1>(x2,x3,x4));
                     this->mParticles.velocities.push_back(Eigen::Matrix<T,dim,1>(0.0,0.0,0.0));
                     this->mParticles.masses.push_back(0.0);
