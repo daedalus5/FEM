@@ -18,7 +18,7 @@ Implementation details:
 - OBJ output for rendering
 - Rendering in Houdini  
 
-![alt text](http://url/to/img.png)
+![alt text](https://github.com/daedalus5/FEM/blob/master/pics/class_structure.PNG)
 
 Limitations and Struggles:  
 - Implicit solver does not work...yet
