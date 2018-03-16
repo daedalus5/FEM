@@ -22,8 +22,8 @@ Implementation details
 
 Implicit Integration
 ------------
-![alt text](https://github.com/daedalus5/FEM/blob/master/pics/eqn_1.JPG)
-![alt text](https://github.com/daedalus5/FEM/blob/master/pics/eqn_2.JPG)
+![alt text](https://github.com/daedalus5/FEM/blob/master/pics/eqn_1.PNG)
+![alt text](https://github.com/daedalus5/FEM/blob/master/pics/eqn_2.PNG)
 
 Class Diagram
 ------------
