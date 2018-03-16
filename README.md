@@ -25,9 +25,9 @@ Limitations and Struggles:
 - Instability in explicit solver as simulation goes on (>3 bounces) 
 
 Resources:  
-2012 SIGGRAPH course notes on FEM
-Professor Kavan's Youtube videos
-MPM Snow Simulation paper for implicit  
-TA's Josh and Ziyin  
-Andre  
-Professor Jiang  
+- 2012 SIGGRAPH course notes on FEM
+- Professor Kavan's Youtube videos
+- MPM Snow Simulation paper for implicit  
+- TA's Josh and Ziyin  
+- Andre  
+- Professor Jiang
