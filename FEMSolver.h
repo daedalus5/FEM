@@ -15,26 +15,24 @@
 #include <Eigen/IterativeLinearSolvers>
 #include <unsupported/Eigen/IterativeSolvers>
 
-//#define USE_EXPLICIT
-#define USE_IMPLICIT
-//#define WORK_IN_PROGRESS
-#ifdef WORK_IN_PROGRESS
-#include "utility/MINRES.h"
-#endif
-
+#define USE_EXPLICIT
+//#define USE_IMPLICIT
 
 // values are for rubber;
 template<class T, int dim>
 double TetraMesh<T,dim>::k = 500000.f;
 template<class T, int dim>
 double TetraMesh<T,dim>::nu = 0.3f;
-//const int divisor = 600;
-//const double fps = 24.f;
-//const double cTimeStep = 1.0/(fps*divisor); //0.001f;
-//const double cTimeStep = 1e-5;
-//const int stepsPerFrame = 600;
+
+#ifdef USE_EXPLICIT
+const double cTimeStep = 1e-5;
+const int stepsPerFrame = 600;
+#endif
+#ifdef USE_IMPLICIT
 const double cTimeStep = 0.01;
 const int stepsPerFrame = 10;
+#endif
+
 const double gravity = 9.8f;
 const double epsilon = 1e-9;
 
@@ -53,10 +51,6 @@ inline double epsilonCheckSquareMatrix(Eigen::Matrix<T,dim,dim> &matrix) {
         }
     }
 }
-
-// 24 frames per second
-// mesh resolution
-// try outputting poly file to see tetrahedra deform
 
 template<class T, int dim>
 class FEMSolver {
@@ -122,14 +116,11 @@ FEMSolver<T,dim>::FEMSolver(int steps) : mTetraMesh(TetraMesh<T,dim>("objects/cu
 
 template<class T, int dim>
 FEMSolver<T,dim>::~FEMSolver(){
-    //delete mTetraMesh;
 }
 
 template<class T, int dim>
 void FEMSolver<T,dim>::initializeMesh() {
     mTetraMesh.generateTetras();
-    // mTetraMesh = new TetraMesh<T,dim>("objects/cube.1");
-    // mTetraMesh->generateTetras();
 }
 
 template<class T, int dim>
@@ -179,11 +170,7 @@ void FEMSolver<T,dim>::cookMyJello() {
     //     mTetraMesh.mParticles.positions[i] += Eigen::Matrix<T,dim,1>(1.0f,0.0,0.0);
     // }
 
-    //int numSteps = (mSteps / fps) / (cTimeStep);
-
     // <<<<< Time Loop BEGIN
-    //int currFrame = 0;
-
     for(int z = 1; z <= mSteps; ++z){
         for(int i = 0; i < stepsPerFrame; ++i)
         {
@@ -196,7 +183,6 @@ void FEMSolver<T,dim>::cookMyJello() {
                 computeJFinvT(JFinvT, F);
                 double J = F.determinant();
                 P = 2.f * mu * (F - R) + lambda * (J - 1.f) * JFinvT;
-                //epsilonCheckSquareMatrix(P);
                 //P = mu * (F - (1.f/J) * JFinvT) + lambda * std::log(J) * (1.f/J) * JFinvT;
                 G = -1 * P * t.mVolDmInvT;
                 epsilonCheckSquareMatrix(G);
@@ -206,10 +192,9 @@ void FEMSolver<T,dim>::cookMyJello() {
                 }
                 mTetraMesh.mParticles.forces[t.mPIndices[3]] += -1.f * (G.col(0) + G.col(1) + G.col(2));
             }
-            // <<<<< force update END
-            // <<<<< Integration BEGIN
 
-
+    // <<<<< force update END
+    // <<<<< Integration BEGIN
 
     #ifdef USE_EXPLICIT
 
@@ -230,12 +215,12 @@ void FEMSolver<T,dim>::cookMyJello() {
 
                 scene.updatePosition(cTimeStep);
 
-                //<<<<<< FOR SCENE COLLISIONS
+                //<<<<<< FOR SCENE COLLISIONS TYPE 1
                 // if(scene.checkCollisions(newState.mComponents[POS], temp_pos)){
                 //     newState.mComponents[POS] = temp_pos;
                 //     newState.mComponents[VEL] = (temp_pos - currState.mComponents[POS]) / cTimeStep;
                 // }
-
+                //<<<<<< FOR SCENE COLLISIONS TYPE 2
                 if(scene.checkCollisions(newState.mComponents[POS], temp_pos)){
                     newState.mComponents[POS] = currState.mComponents[POS];
                     newState.mComponents[VEL] = Eigen::Matrix<T,dim,1>(0,0,0);
@@ -256,8 +241,6 @@ void FEMSolver<T,dim>::cookMyJello() {
 
     #ifdef USE_IMPLICIT
 
-            // TODO : Implicit Integrator Here
-
             const int n = size;
             const int dimen = dim * n;
 
@@ -272,22 +255,18 @@ void FEMSolver<T,dim>::cookMyJello() {
             }
 
             // 2. Calculate K Matrix here
-
             Eigen::MatrixXf KMatrix(dimen, dimen);
             KMatrix.setZero();
             computeK(KMatrix, F, JFinvT, R, S);
 
             // 3. Do A = A - K
-
             AMatrix -= KMatrix;
 
             // 4. Calculate B Matrix
-
             Eigen::MatrixXf B1Mat(dimen, 1);
             B1Mat.setZero();
 
             for(int d = 0; d < n; ++d) {
-
                 // Doing Calculations as:
                 // B = Vn * mass/(dt) + f + mg
 
@@ -300,38 +279,15 @@ void FEMSolver<T,dim>::cookMyJello() {
                 }
             }
 
-            //std::cout << "Break 3" << std::endl;
-
             // 5. Solve Ax = B
-
             Eigen::MatrixXf dxMat(dimen, 1);
             dxMat.setZero();
-
-    #ifdef WORK_IN_PROGRESS
-
-            //Eigen::MINRES<Eigen::MatrixXf> mr;
-
-            //mr.compute(AMatrix);
-            //dxMat = mr.solve(B1Mat);
-
-            Eigen::ConjugateGradient<Eigen::SparseMatrix<double>, Lower|Upper> cg;
-            cg.compute(AMatrix);
-            dxMat = cg.solve(B1Mat);
-
-    #endif
 
     	    Eigen::MINRES<Eigen::MatrixXf, Eigen::Lower|Eigen::Upper, Eigen::IdentityPreconditioner> minres;
         	minres.compute(AMatrix);
         	dxMat = minres.solve(B1Mat);
 
-            //std::cout << dxMat << std::endl;
-            //std::cout << dxMat << std::endl;
-            //exit(1);
-
-            //std::cout << "Break 4" << std::endl;
-
             // 6. Update velocities and position with dx
-
             Eigen::Matrix<T, dim, 1> newPos;
             newPos.setZero();
             Eigen::Matrix<T, dim, 1> newVel;
@@ -339,9 +295,7 @@ void FEMSolver<T,dim>::cookMyJello() {
             Eigen::Matrix<T, dim, 1> deltaX;
             deltaX.setZero();
 
-            // Adding collision tests here
             for(int d = 0; d < size; ++d) {
-
                 for(int e = 0; e < dim; ++e) {
                     deltaX(e, 0) = dxMat(d * dim + e, 0);
                 }
@@ -351,6 +305,7 @@ void FEMSolver<T,dim>::cookMyJello() {
                 // x(n + 1) = x(n) + dx;
                 newPos = mTetraMesh.mParticles.positions[d] + deltaX;
 
+                // collision tests here
                 if(scene.checkCollisions(newPos, temp_pos)){
                     newPos = mTetraMesh.mParticles.positions[d];
                     newVel.setZero();
@@ -358,25 +313,14 @@ void FEMSolver<T,dim>::cookMyJello() {
 
                 mTetraMesh.mParticles.positions[d] = newPos;
                 mTetraMesh.mParticles.velocities[d] = newVel;
-
             }
-
-            //std::cout << "Break 5" << std::endl;
-
     #endif
             // <<<<< Integration END
-
-           // if(i % divisor == 0  || i == 0)
-           // {
-           //   mTetraMesh.outputFrame(currFrame);
-           //   scene.outputFrame(currFrame);
-           //   currFrame++;
-           // }
         }
         mTetraMesh.outputFrame(z);
         scene.outputFrame(z);
-        // <<<<< Time Loop END
     }
+    // <<<<< Time Loop END
 }
 
 template<class T, int dim>
@@ -428,16 +372,12 @@ void FEMSolver<T,dim>::computeRS(Eigen::Matrix<T,dim,dim>& R,
                     const Eigen::Matrix<T,dim,dim>& F){
     Eigen::JacobiSVD<Eigen::Matrix<T,dim,dim>> svd(F, Eigen::ComputeFullU | Eigen::ComputeFullV);
     Eigen::Matrix<T,dim,dim> U = svd.matrixU();
-    //epsilonCheckSquareMatrix(U);
     Eigen::Matrix<T,dim,dim> V = svd.matrixV();
-    //epsilonCheckSquareMatrix(V);
     Eigen::Matrix<T,dim,dim> sigma = Eigen::Matrix<T,dim,dim>::Zero(dim, dim);
 
     for(int i = 0; i < dim; ++i){
         sigma(i, i) = svd.singularValues()[i];
     }
-    //epsilonCheckSquareMatrix(sigma);
-
     if(U.determinant() < 0.f){
         U.col(dim - 1) = -1 * U.col(dim - 1);
         sigma(dim - 1, dim - 1) = -1 * sigma(dim - 1, dim - 1);
@@ -448,9 +388,7 @@ void FEMSolver<T,dim>::computeRS(Eigen::Matrix<T,dim,dim>& R,
     }
 
     R = U * V.transpose();
-    //epsilonCheckSquareMatrix(R);
     S = V * sigma * V.transpose();
-    //epsilonCheckSquareMatrix(S);
 }
 
 template<class T, int dim>
@@ -475,8 +413,7 @@ void FEMSolver<T,dim>::computeJFinvT(Eigen::Matrix<T,dim,dim>& JFinvT, const Eig
             break;
         default: std::cout << "error: dimension must be 2 or 3" << std::endl;
     }
-    // transpose is now hard-coded!!
-    //epsilonCheckSquareMatrix(JFinvT);
+    // transpose is hard-coded!!
 }
 
 template<class T, int dim>
@@ -518,9 +455,6 @@ void FEMSolver<T,dim>::computeK(Eigen::MatrixXf& KMatrix,
                 }
             }
         }
-        //std::cout << K << std::endl;
-        //exit(1);
-        //
         for(int i = 0; i < dim + 1; ++i){
             for(int j = 0; j < dim + 1; ++j){
                 for(int m = 0; m < dim; ++m){
