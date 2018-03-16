@@ -18,6 +18,8 @@ Implementation details:
 - OBJ output for rendering
 - Rendering in Houdini  
 
+![alt text](http://url/to/img.png)
+
 Limitations and Struggles:  
 - Implicit solver does not work...yet
 - Instability in explicit solver as simulation goes on (>3 bounces) 
