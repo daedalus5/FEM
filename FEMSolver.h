@@ -33,7 +33,7 @@ double TetraMesh<T,dim>::nu = 0.3f;
 //const double cTimeStep = 1.0/(fps*divisor); //0.001f;
 //const double cTimeStep = 1e-5;
 //const int stepsPerFrame = 600;
-const double cTimeStep = 1;
+const double cTimeStep = 0.01;
 const int stepsPerFrame = 10;
 const double gravity = 9.8f;
 const double epsilon = 1e-9;
@@ -277,15 +277,9 @@ void FEMSolver<T,dim>::cookMyJello() {
             KMatrix.setZero();
             computeK(KMatrix, F, JFinvT, R, S);
 
-            //std::cout << "Break 1" << std::endl;
-
             // 3. Do A = A - K
 
             AMatrix -= KMatrix;
-
-            //std::cout << AMatrix << std::endl;
-
-            //std::cout << "Break 2" << std::endl;
 
             // 4. Calculate B Matrix
 
@@ -299,6 +293,7 @@ void FEMSolver<T,dim>::cookMyJello() {
 
                 for(int e = 0; e < dim; ++e) {
                     B1Mat(dim * d + e, 0) = mTetraMesh.mParticles.masses[d] * mTetraMesh.mParticles.velocities[d](e) * (1 / cTimeStep) + mTetraMesh.mParticles.forces[d](e);
+                    //B1Mat(dim * d + e, 0) = mTetraMesh.mParticles.masses[d] * mTetraMesh.mParticles.velocities[d](e) * (1 / cTimeStep);
                     if(e == 1){
                         B1Mat(dim * d + e, 0) += mTetraMesh.mParticles.masses[d] * -1 * gravity;
                     }
@@ -329,7 +324,7 @@ void FEMSolver<T,dim>::cookMyJello() {
         	minres.compute(AMatrix);
         	dxMat = minres.solve(B1Mat);
 
-            std::cout << dxMat << std::endl;
+            //std::cout << dxMat << std::endl;
             //std::cout << dxMat << std::endl;
             //exit(1);
 
@@ -530,7 +525,7 @@ void FEMSolver<T,dim>::computeK(Eigen::MatrixXf& KMatrix,
             for(int j = 0; j < dim + 1; ++j){
                 for(int m = 0; m < dim; ++m){
                     for(int n = 0; n < dim; ++n){
-                        KMatrix(3 * t.mPIndices[i] + m, 3 * t.mPIndices[j] + n) = K(3*i + m, 3*j + n);
+                        KMatrix(3 * t.mPIndices[i] + m, 3 * t.mPIndices[j] + n) += K(3*i + m, 3*j + n);
                     }
                 }
             }
@@ -571,7 +566,7 @@ double FEMSolver<T,dim>::DFDx(int m, int n, int q, int r, const Tetrahedron<T,di
 template<class T, int dim>
 double FEMSolver<T,dim>::DFDF(int j, int k, int m, int n)
 {
-    if(j == k && k == n){
+    if(j == k && m == n){
         return 1.0;
     }
     else{
@@ -627,47 +622,47 @@ double FEMSolver<T,dim>::DHDF(int j, int k, int m, int n,
     Eigen::Matrix<T,dim,dim> dHdF = Eigen::Matrix<T,dim,dim>::Zero(dim, dim);
     if(m == 0 & n == 0){
         dHdF << 0, 0, 0,
-                0, F(2,2), -F(1,2),
-                0, -F(2,1), F(1,1);
+                0, F(2,2), -F(2,1),
+                0, -F(1,2), F(1,1);
     }
     else if(m == 0 && n == 1){
-        dHdF << 0, -F(2,2), F(1,2),
-                0, 0, 0,
-                0, F(2,0), -F(1,0);
+        dHdF << 0, 0, 0,
+                -F(2,2), 0, F(2,0),
+                F(1,2), 0, -F(1,0);
     }
     else if(m == 0 && n == 2){
-        dHdF << 0, F(2,1), -F(1,1),
-                0, -F(2,0), F(1,0),
-                0, 0, 0;
+        dHdF << 0, 0, 0,
+                F(2,1), -F(2,0), 0,
+                -F(1,1), F(1,0), 0;
     }
     else if(m == 1 && n == 0){
-        dHdF << 0, 0, 0,
-                -F(2,2), 0, F(0,2),
-                F(2,1), 0, -F(0,1);
+        dHdF << 0, -F(2,2), F(2,1),
+                0, 0, 0,
+                0, F(0,2), -F(0,1);
     }
     else if(m == 1 && n == 1){
-        dHdF << F(2,2), 0, -F(0,2),
+        dHdF << F(2,2), 0, -F(2,0),
                 0, 0, 0,
-                -F(2,0), 0, F(0,0);
+                -F(0,2), 0, F(0,0);
     }
     else if(m == 1 && n == 2){
-        dHdF << -F(2,1), 0, F(0,1),
-                F(2,0), 0, -F(0,0),
-                0, 0, 0;
+        dHdF << -F(2,1), F(2,0), 0,
+                0, 0, 0,
+                F(0,1), -F(0,0), 0;
     }
     else if(m == 2 && n == 0){
         dHdF << 0, 0, 0,
-                F(1,2), -F(0,2), 0,
-                -F(1,1), F(0,1), 0;
+                0, F(1,2), F(2,0),
+                0, -F(0,2), F(0,1);
     }
     else if(m == 2 && n == 1){
-        dHdF << -F(1,2), F(0,2), 0,
-                0, 0, 0,
-                F(1,0), -F(0,0), 0;
+        dHdF << -F(1,2), 0, F(1,0),
+                F(0,2), 0, -F(0,0),
+                0, 0, 0;
     }
     else if(m == 2 && n == 2){
-        dHdF << F(1,1), -F(0,1), 0,
-                -F(1,0), F(0,0), 0,
+        dHdF << F(1,1), -F(1,0), 0,
+                -F(0,1), F(0,0), 0,
                 0, 0, 0;
     }
     else{
