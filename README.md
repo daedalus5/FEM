@@ -10,11 +10,11 @@ Anantha Srinivas - Explicit and implicit integrators
 
 Implementation details:  
 - Fixed Corotated elastic model  
+- Tetgen file input reader
 - Even distribution of mass between tetrahedron vertices  
 - Collisions using signed distance functions  
 - Forward Euler integrator  
-- (Work in progress) Backward Euler integrator 
-- Tetgen file input reader
+- (Work in progress) Backward Euler integrator
 - OBJ output for rendering
 - Rendering in Houdini  
 
