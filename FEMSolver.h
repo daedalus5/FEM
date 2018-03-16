@@ -15,8 +15,8 @@
 #include <Eigen/IterativeLinearSolvers>
 #include <unsupported/Eigen/IterativeSolvers>
 
-#define USE_EXPLICIT
-//#define USE_IMPLICIT
+//#define USE_EXPLICIT
+#define USE_IMPLICIT
 
 // values are for rubber;
 template<class T, int dim>
@@ -73,7 +73,7 @@ private:
                     const Tetrahedron<T,dim>& t);       // computes F matrix
     void computeRS(Eigen::Matrix<T,dim,dim>& R,
                     Eigen::Matrix<T,dim,dim>& S,
-                    const Eigen::Matrix<T,dim,dim>& F); // computes R  and S matrices from F using SVD
+                    const Eigen::Matrix<T,dim,dim>& F); // computes R and S matrices from F using SVD
     void computeJFinvT(Eigen::Matrix<T,dim,dim>& JFinvT,
                     const Eigen::Matrix<T,dim,dim>& F); // computes det(F) * (F^-1)^T
     void computeK(Eigen::MatrixXf& KMatrix,
@@ -272,7 +272,6 @@ void FEMSolver<T,dim>::cookMyJello() {
 
                 for(int e = 0; e < dim; ++e) {
                     B1Mat(dim * d + e, 0) = mTetraMesh.mParticles.masses[d] * mTetraMesh.mParticles.velocities[d](e) * (1 / cTimeStep) + mTetraMesh.mParticles.forces[d](e);
-                    //B1Mat(dim * d + e, 0) = mTetraMesh.mParticles.masses[d] * mTetraMesh.mParticles.velocities[d](e) * (1 / cTimeStep);
                     if(e == 1){
                         B1Mat(dim * d + e, 0) += mTetraMesh.mParticles.masses[d] * -1 * gravity;
                     }
@@ -500,7 +499,7 @@ double FEMSolver<T,dim>::DFDx(int m, int n, int q, int r, const Tetrahedron<T,di
 template<class T, int dim>
 double FEMSolver<T,dim>::DFDF(int j, int k, int m, int n)
 {
-    if(j == k && m == n){
+    if(j == m && k == n){
         return 1.0;
     }
     else{
