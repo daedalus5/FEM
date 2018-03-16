@@ -2,6 +2,8 @@
 #### A jello simulation using the Finite Element Method
 #### Demo video link: https://youtu.be/rfcBbrljoug
 
+![Alt Text](videos/default.gif)
+
 Contributors
 ------------
 Connie Chang - Collisions and rendering  
