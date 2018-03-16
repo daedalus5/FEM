@@ -1,11 +1,11 @@
 # FEM Fatale
 #### A jello simulation using the Finite Element Method
-#### Demo video link: 
+#### Demo video link: https://youtu.be/rfcBbrljoug
 
 Contributors:  
 Connie Chang - Collisions and rendering  
 Marissa Como - I/O, tetgen, test cases, debugging  
-Zach Corse - Force calculations, matrix calculations  
+Zach Corse - Force calculations, K matrix calculations  
 Anantha Srinivas - Explicit and implicit integrators  
 
 Implementation details:  
@@ -13,19 +13,19 @@ Implementation details:
 - Even distribution of mass between tetrahedron vertices  
 - Collisions using signed distance functions  
 - Forward Euler integrator  
-- (Work in progress) Backward Euler integrator  
+- (Work in progress) Backward Euler integrator 
+- Tetgen file input reader
+- OBJ output for rendering
 - Rendering in Houdini  
 
 Limitations and Struggles:  
-- Physics is not realistic (gravity is very low and Young's modulus is extremely high)  
-- Implicit solver does not work  
-- Instability in explicit solver as simulation goes on  
-
+- Implicit solver does not work...yet
+- Instability in explicit solver as simulation goes on (>3 bounces) 
 
 Resources:  
-SIGGRAPH paper  
-Youtube video  
-snow paper for implicit  
-TA's  
+2012 SIGGRAPH course notes on FEM
+Professor Kavan's Youtube videos
+MPM Snow Simulation paper for implicit  
+TA's Josh and Ziyin  
 Andre  
 Professor Jiang  
