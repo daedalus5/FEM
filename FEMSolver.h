@@ -15,8 +15,8 @@
 #include <Eigen/IterativeLinearSolvers>
 #include <unsupported/Eigen/IterativeSolvers>
 
-//#define USE_EXPLICIT
-#define USE_IMPLICIT
+#define USE_EXPLICIT
+//#define USE_IMPLICIT
 
 // values are for rubber;
 template<class T, int dim>
@@ -479,14 +479,14 @@ double FEMSolver<T,dim>::DsqPsiDsqF(int j, int k, int m, int n,
 template<class T, int dim>
 double FEMSolver<T,dim>::DFDx(int m, int n, int q, int r, const Tetrahedron<T,dim>& t){
     double val = 0.0;
-    if(q == 0){
+    if(q == 3){
         for(int l = 0; l < dim; ++l){
             if(r == m){
                 val += -1 * t.mDmInv(l, n);
             }
         }
     }
-    else if(q == 1 || q == 2 || q == 3){
+    else if(q == 0 || q == 1 || q == 2){
         for(int l = 0; l < dim; ++l){
             if(r == m && q == l){
                 val += t.mDmInv(l, n);
