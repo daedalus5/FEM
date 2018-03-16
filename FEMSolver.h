@@ -15,8 +15,8 @@
 #include <Eigen/IterativeLinearSolvers>
 #include <unsupported/Eigen/IterativeSolvers>
 
-#define USE_EXPLICIT
-//#define USE_IMPLICIT
+//#define USE_EXPLICIT
+#define USE_IMPLICIT
 //#define WORK_IN_PROGRESS
 #ifdef WORK_IN_PROGRESS
 #include "utility/MINRES.h"
@@ -31,8 +31,10 @@ double TetraMesh<T,dim>::nu = 0.3f;
 //const int divisor = 600;
 //const double fps = 24.f;
 //const double cTimeStep = 1.0/(fps*divisor); //0.001f;
-const double cTimeStep = 1e-5;
-const int stepsPerFrame = 600;
+//const double cTimeStep = 1e-5;
+//const int stepsPerFrame = 600;
+const double cTimeStep = 1;
+const int stepsPerFrame = 10;
 const double gravity = 9.8f;
 const double epsilon = 1e-9;
 
@@ -260,40 +262,46 @@ void FEMSolver<T,dim>::cookMyJello() {
             const int dimen = dim * n;
 
             // 1. Calculate A Matrix Here
-            double a1 = mTetraMesh->mParticles.masses[0] / (cTimeStep * cTimeStep);
+            Eigen::MatrixXf AMatrix(dimen, dimen);
+            AMatrix.setZero();
 
-            Eigen::MatrixXf A1Mat(dimen, 1);
-            A1Mat.setConstant(a1);
-
-            Eigen::MatrixXf AMatrix = A1Mat.asDiagonal();
+            for(int d = 0; d < n; ++d){
+                for(int e = 0; e < dim; ++e){
+                    AMatrix(dim * d + e, dim * d + e) = mTetraMesh.mParticles.masses[d] * (1 / (cTimeStep * cTimeStep));
+                }
+            }
 
             // 2. Calculate K Matrix here
 
             Eigen::MatrixXf KMatrix(dimen, dimen);
-
             KMatrix.setZero();
             computeK(KMatrix, F, JFinvT, R, S);
 
             //std::cout << "Break 1" << std::endl;
 
-            // 3. Do A = A + K
+            // 3. Do A = A - K
 
-            AMatrix += KMatrix;
+            AMatrix -= KMatrix;
+
+            //std::cout << AMatrix << std::endl;
 
             //std::cout << "Break 2" << std::endl;
 
             // 4. Calculate B Matrix
 
-            double b1 = mTetraMesh->mParticles.masses[0] / (cTimeStep);
             Eigen::MatrixXf B1Mat(dimen, 1);
+            B1Mat.setZero();
 
-            for(int d = 0; d < size; ++d) {
+            for(int d = 0; d < n; ++d) {
 
                 // Doing Calculations as:
                 // B = Vn * mass/(dt) + f + mg
 
-                for(int k = 0; k < dim; ++k) {
-                    B1Mat(dim * d + k, 0) = mTetraMesh->mParticles.velocities[d](k) * b1 + mTetraMesh->mParticles.forces[d](k) + k == 1? mTetraMesh->mParticles.masses[d] * -gravity : 0;
+                for(int e = 0; e < dim; ++e) {
+                    B1Mat(dim * d + e, 0) = mTetraMesh.mParticles.masses[d] * mTetraMesh.mParticles.velocities[d](e) * (1 / cTimeStep) + mTetraMesh.mParticles.forces[d](e);
+                    if(e == 1){
+                        B1Mat(dim * d + e, 0) += mTetraMesh.mParticles.masses[d] * -1 * gravity;
+                    }
                 }
             }
 
@@ -306,10 +314,14 @@ void FEMSolver<T,dim>::cookMyJello() {
 
     #ifdef WORK_IN_PROGRESS
 
-            Eigen::MINRES<Eigen::MatrixXf> mr;
+            //Eigen::MINRES<Eigen::MatrixXf> mr;
 
-            mr.compute(AMatrix);
-            dxMat = mr.solve(B1Mat);
+            //mr.compute(AMatrix);
+            //dxMat = mr.solve(B1Mat);
+
+            Eigen::ConjugateGradient<Eigen::SparseMatrix<double>, Lower|Upper> cg;
+            cg.compute(AMatrix);
+            dxMat = cg.solve(B1Mat);
 
     #endif
 
@@ -317,32 +329,40 @@ void FEMSolver<T,dim>::cookMyJello() {
         	minres.compute(AMatrix);
         	dxMat = minres.solve(B1Mat);
 
+            std::cout << dxMat << std::endl;
+            //std::cout << dxMat << std::endl;
+            //exit(1);
+
             //std::cout << "Break 4" << std::endl;
 
             // 6. Update velocities and position with dx
 
             Eigen::Matrix<T, dim, 1> newPos;
+            newPos.setZero();
             Eigen::Matrix<T, dim, 1> newVel;
+            newPos.setZero();
+            Eigen::Matrix<T, dim, 1> deltaX;
+            deltaX.setZero();
 
             // Adding collision tests here
             for(int d = 0; d < size; ++d) {
 
-                for(int k = 0; k < dim; ++k) {
-                    newPos(k, 0) = dxMat(d * dim + k, 0);
+                for(int e = 0; e < dim; ++e) {
+                    deltaX(e, 0) = dxMat(d * dim + e, 0);
                 }
-                // v(n + 1) = v(n) + dx/dt;
-                newVel = mTetraMesh->mParticles.velocities[d] + newPos /  cTimeStep;
+                // v(n + 1) = dx/dt;
+                newVel = deltaX / cTimeStep;
 
                 // x(n + 1) = x(n) + dx;
-                newPos = mTetraMesh->mParticles.positions[d] + newPos;
+                newPos = mTetraMesh.mParticles.positions[d] + deltaX;
 
                 if(scene.checkCollisions(newPos, temp_pos)){
-                    newPos = temp_pos;
-                    newVel = (temp_pos - mTetraMesh->mParticles.positions[d]) / cTimeStep;
+                    newPos = mTetraMesh.mParticles.positions[d];
+                    newVel.setZero();
                 }
 
-                mTetraMesh->mParticles.positions[d] = newPos;
-                mTetraMesh->mParticles.velocities[d] = newVel;
+                mTetraMesh.mParticles.positions[d] = newPos;
+                mTetraMesh.mParticles.velocities[d] = newVel;
 
             }
 
@@ -484,7 +504,7 @@ void FEMSolver<T,dim>::computeK(Eigen::MatrixXf& KMatrix,
                 const Eigen::Matrix<T,dim,dim>& R,
                 const Eigen::Matrix<T,dim,dim>& S)
 {
-    for(Tetrahedron<T,dim> t : mTetraMesh->mTetras){
+    for(Tetrahedron<T,dim> t : mTetraMesh.mTetras){
         Eigen::MatrixXf K(4*dim, 4*dim);
         for(int p = 0; p < dim + 1; ++p){
             for(int q = 0; q < dim + 1; ++q){
@@ -503,6 +523,8 @@ void FEMSolver<T,dim>::computeK(Eigen::MatrixXf& KMatrix,
                 }
             }
         }
+        //std::cout << K << std::endl;
+        //exit(1);
         //
         for(int i = 0; i < dim + 1; ++i){
             for(int j = 0; j < dim + 1; ++j){
