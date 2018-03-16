@@ -2,13 +2,15 @@
 #### A jello simulation using the Finite Element Method
 #### Demo video link: https://youtu.be/rfcBbrljoug
 
-Contributors:  
+Contributors
+------------
 Connie Chang - Collisions and rendering  
 Marissa Como - I/O, tetgen, test cases, debugging  
 Zach Corse - Force calculations, K matrix calculations  
 Anantha Srinivas - Explicit and implicit integrators  
 
-Implementation details:  
+Implementation details
+------------
 - Fixed Corotated elastic model  
 - Tetgen file input reader
 - Even distribution of mass between tetrahedron vertices  
@@ -18,13 +20,22 @@ Implementation details:
 - OBJ output for rendering
 - Rendering in Houdini  
 
+Implicit Integration
+------------
+![alt text](https://github.com/daedalus5/FEM/blob/master/pics/eqn_1.JPG)
+![alt text](https://github.com/daedalus5/FEM/blob/master/pics/eqn_2.JPG)
+
+Class Diagram
+------------
 ![alt text](https://github.com/daedalus5/FEM/blob/master/pics/class_structure.PNG)
 
-Limitations and Struggles:  
+Limitations and Struggles
+------------
 - Implicit solver does not work...yet
 - Instability in explicit solver as simulation goes on (>3 bounces) 
 
-Resources:  
+Resources
+------------
 - 2012 SIGGRAPH course notes on FEM
 - Professor Kavan's Youtube videos
 - MPM Snow Simulation paper for implicit  
