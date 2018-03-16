@@ -1,11 +1,31 @@
 # FEM Fatale
+#### A jello simulation using the Finite Element Method
+#### Demo video link: 
 
-Hello TAs
+Contributors:  
+Connie Chang - Collisions and rendering  
+Marissa Como - I/O, tetgen, test cases, debugging  
+Zach Corse - Force calculations, matrix calculations  
+Anantha Srinivas - Explicit and implicit integrators  
 
-We implemented i/o, forward Euler, force calculations, and collisions with a plane for FEM.
+Implementation details:  
+- Fixed Corotated elastic model  
+- Even distribution of mass between tetrahedron vertices  
+- Collisions using signed distance functions  
+- Forward Euler integrator  
+- (Work in progress) Backward Euler integrator  
+- Rendering in Houdini  
 
-Our cube is inverting on itself because there's something wrong with our force calculations. We're hoping to get some feedback on this component of our code. Please check in FEMSolver.h for force calculations.
+Limitations and Struggles:  
+- Physics is not realistic (gravity is very low and Young's modulus is extremely high)  
+- Implicit solver does not work  
+- Instability in explicit solver as simulation goes on  
 
-Thanks!
 
-Anantha, Zach, Marissa, and Connie :)
+Resources:  
+SIGGRAPH paper  
+Youtube video  
+snow paper for implicit  
+TA's  
+Andre  
+Professor Jiang  
